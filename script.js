@@ -577,6 +577,32 @@ function populateWilayas() {
     });
 }
 
+// ─── دوال عرض الصورة المكبرة بالسلة ───
+window.openImageLightbox = function(src) {
+    const modal = document.getElementById('image-lightbox-modal');
+    const img = document.getElementById('lightbox-img');
+    if (modal && img) {
+        img.src = src;
+        modal.style.display = 'flex';
+    }
+};
+
+window.closeImageLightbox = function() {
+    const modal = document.getElementById('image-lightbox-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+};
+
+// إغلاق النافذة عند النقر على الخلفية المظلمة
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('image-lightbox-modal');
+    if (e.target === modal) {
+        modal.style.display = 'none';
+    }
+});
+
+// ─── رسم عناصر السلة مع خاصية تكبير الصورة ───
 function renderCartPage() {
     const container = document.getElementById('cart-items-container-page');
     const totalEl = document.getElementById('cart-total-price-page');
@@ -595,12 +621,17 @@ function renderCartPage() {
 
         cart.forEach((item, i) => {
             subtotal += item.price;
+            const imgSrc = item.image_url || 'images/logo3.png';
+
             container.innerHTML += `
                 <div class="cart-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--color-border); gap: 14px;">
                     <div style="display:flex; align-items:center; gap:14px; min-width:0;">
-                        <!-- صورة المنتج المصغرة -->
-                        <img src="${item.image_url || 'images/logo3.png'}" alt="${item.name}" 
-                             style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 1.5px solid var(--color-border); flex-shrink: 0; background: var(--color-bg);"
+                        <!-- الصورة المصغرة القابلة للنقر للرؤية بوضوح -->
+                        <img src="${imgSrc}" alt="${item.name}" 
+                             class="cart-thumb-click"
+                             onclick="openImageLightbox('${imgSrc}')"
+                             title="${currentLanguage === 'ar' ? 'اضغط لتكبير الصورة' : 'Cliquer pour agrandir'}"
+                             style="width: 65px; height: 65px; border-radius: 12px; object-fit: cover; border: 1.5px solid var(--color-border); flex-shrink: 0; background: var(--color-bg);"
                              onerror="this.src='images/logo3.png'">
                         
                         <div class="cart-item-info">
