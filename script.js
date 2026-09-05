@@ -37,7 +37,9 @@ about_history_text: "في عام 140 قبل الميلاد، أسس الفيني
         size_guide_tip: "نصيحة: إذا كنت تفضل مظهراً فضفاضاً (Oversized) ومتردداً بين مقاسين، اختر المقاس الأكبر.",
         alert_color: "يرجى اختيار اللون", alert_size: "يرجى اختيار المقاس", alert_rating: "يرجى تقييم المنتج باختيار النجوم", alert_added: "تمت الإضافة للسلة بنجاح!", alert_order_success: "تم إرسال طلبك بنجاح! شكراً لثقتكم.", alert_review_success: "شكراً لمشاركتنا رأيك!",
         colors: "الألوان:", sizes: "المقاسات:", quantity: "الكمية", search_placeholder: "ابحث عن منتج...",
-        footer_rights: "جميع الحقوق محفوظة."
+        footer_rights: "جميع الحقوق محفوظة.",order_success_title: "شكراً لثقتكم بنا!",
+        order_success_desc: "تم تسجيل طلبك بنجاح. سيقوم فريق إيكوزيوم (ICOSIUM) بالتواصل معك هاتفياً قريباً لتأكيد الطلب وبدء الشحن.",
+        order_success_btn: "العودة إلى المتجر"
        
     },
     fr: {
@@ -69,7 +71,9 @@ about_history_text: "En 140 av. J.-C., les Phéniciens fondèrent Ikosim en Afri
         th_size: "Taille",
         th_chest: "Largeur (Poitrine)",
         th_length: "Longueur",
-        size_guide_tip: "Conseil : Si vous hésitez entre deux tailles pour une coupe décontractée, choisissez la taille supérieure."
+        size_guide_tip: "Conseil : Si vous hésitez entre deux tailles pour une coupe décontractée, choisissez la taille supérieure.",order_success_title: "Merci pour votre commande !",
+        order_success_desc: "Votre commande a été enregistrée avec succès. L'équipe ICOSIUM vous contactera par téléphone très prochainement pour confirmer votre commande.",
+        order_success_btn: "Retour à l'accueil"
     },
     en: {
         out_of_stock: "Out of Stock",
@@ -100,7 +104,9 @@ about_history_text: "In 140 B.C.E., the Phoenicians founded Ikosim in North Afri
         th_size: "Size",
         th_chest: "Width (Chest)",
         th_length: "Length",
-        size_guide_tip: "Tip: If you are between two sizes and prefer a relaxed fit, go with the larger size."
+        size_guide_tip: "Tip: If you are between two sizes and prefer a relaxed fit, go with the larger size.",order_success_title: "Thank you for your order!",
+        order_success_desc: "Your order has been placed successfully. The ICOSIUM team will contact you by phone shortly to confirm your order details.",
+        order_success_btn: "Back to Home"
     }
 };
 
@@ -770,18 +776,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     status: 'Pending'
                 };
 
-                const { error } = await supabaseClient.from('orders').insert([orderData]);
+              const { data, error } = await supabaseClient.from('orders').insert([orderData]).select();
 
                 if (error) {
                     console.error("Order error:", error);
                     alert("Erreur lors de la commande. Veuillez réessayer.");
                     btn.disabled = false;
-                    btn.textContent = "Confirmer la commande";
+                    btn.textContent = translations[currentLanguage]?.form_confirm || "Confirmer la commande";
                 } else {
-                    alert(translations[currentLanguage]?.alert_order_success || "Commande réussie ! Merci.");
+                    // تفريغ السلة وحفظها
                     cart = [];
                     saveCartToStorage();
-                    window.location.href = 'index.html';
+
+                    // تعبئة نصوص اللافتة حسب اللغة المختارة
+                    const t = translations[currentLanguage];
+                    document.getElementById('success-title').textContent = t.order_success_title;
+                    document.getElementById('success-msg').textContent = t.order_success_desc;
+                    document.getElementById('success-btn-text').textContent = t.order_success_btn;
+
+                    // إظهار اللافتة الترحيبية
+                    const successModal = document.getElementById('order-success-modal');
+                    if (successModal) {
+                        successModal.style.display = 'flex';
+                    }
                 }
             });
         }
