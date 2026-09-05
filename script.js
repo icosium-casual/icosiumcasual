@@ -541,6 +541,7 @@ function openDetails(p) {
                     id: `${p.id}-${selColor}-${selSize}`,
                     product_id: p.id,
                     name: p.name,
+                   image_url: p.image_url || 'images/logo3.png', // حفظ صورة المنتج
                     color: selColor,
                     size: selSize,
                     qty: quantity,
