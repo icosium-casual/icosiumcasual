@@ -135,5 +135,19 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
+    <!-- نافذة تأكيد واستلام الطلب -->
+<div id="order-success-modal" class="modal" style="display:none; align-items:center; justify-content:center; z-index: 3000;">
+    <div class="modal-content" style="max-width: 460px; text-align: center; padding: 35px 25px; border-radius: 20px;">
+        <div style="width: 70px; height: 70px; background: rgba(0, 200, 150, 0.15); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
+            <i class="fas fa-check"></i>
+        </div>
+        <h2 id="success-title" style="font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 12px;"></h2>
+        <p id="success-msg" style="color: var(--color-text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px;"></p>
+        
+        <button type="button" id="btn-success-home" class="btn-confirm-order" style="margin: 0 auto; max-width: 220px;" onclick="window.location.href='index.html'">
+            <i class="fas fa-arrow-left"></i> <span id="success-btn-text"></span>
+        </button>
+    </div>
+</div>
 </body>
 </html>
