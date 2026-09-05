@@ -12,22 +12,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 /* ═══════════════════════════════════════════════════════
-   ICOSIUM OS — Admin  |  Dark + Light Mode
-   Font: Cabinet Grotesk (headings) + Satoshi (body)
-   Aesthetic: Refined Editorial Commerce
-═══════════════════════════════════════════════════════ */
-/* ═══════════════════════════════════════════════════════
-   ICOSIUM OS — Admin  |  Dark + Light Mode
-   Font: Cabinet Grotesk (headings) + Satoshi (body)
-   Aesthetic: Refined Editorial Commerce
-═══════════════════════════════════════════════════════ */
-/* ═══════════════════════════════════════════════════════
-   ICOSIUM OS — Admin  |  Dark + Light Mode
+   ICOSIUM OS — Admin | Dark + Light Mode
    Font: Cabinet Grotesk (headings) + Satoshi (body)
    Aesthetic: Refined Editorial Commerce
 ═══════════════════════════════════════════════════════ */
 
-/* ── FONTS via CDN fallback ── */
 @import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800,900&f[]=satoshi@300,400,500,700&display=swap');
 
 /* ── THEME TOKENS ── */
@@ -373,7 +362,7 @@ a { text-decoration: none; }
 ══════════════════════════════════════════════════════ */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 18px; margin-bottom: 26px;
 }
 .stat-card {
@@ -793,9 +782,6 @@ a { text-decoration: none; }
 }
 
 /* ══════════════════════════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════════════════════════ */
-/* ══════════════════════════════════════════════════════
    RESPONSIVE ADDITIONS & MODAL FIXES
 ══════════════════════════════════════════════════════ */
 @media (max-width: 1100px) {
@@ -811,29 +797,27 @@ a { text-decoration: none; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .order-detail-grid { grid-template-columns: 1fr; }
   
-  /* جعل جميع الحقول المزدوجة تظهر تحت بعضها في الهاتف */
   .form-row-2, .form-row-3 { grid-template-columns: 1fr !important; }
   
   .content { padding: 18px; }
   .header { padding: 0 18px; }
 
-  /* 💡 الإصلاح الجذري للنافذة المنبثقة (Modal) في الهاتف 💡 */
   .modal-overlay {
     padding: 10px;
-    align-items: center; /* توسيط النافذة */
+    align-items: center;
   }
   .modal-box {
-    margin: 0; /* إزالة الهوامش التي كانت تسبب الانضغاط */
-    width: 100% !important; /* أخذ العرض الكامل المتاح */
+    margin: 0;
+    width: 100% !important;
     max-width: none !important;
     height: auto;
-    max-height: 90vh; /* تحديد ارتفاع أقصى */
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
     border-radius: 16px;
   }
   .modal-body {
-    overflow-y: auto; /* السماح بالتمرير داخل النافذة */
+    overflow-y: auto;
     flex: 1;
     padding: 20px 15px;
   }
@@ -849,9 +833,8 @@ a { text-decoration: none; }
     z-index: 10;
   }
 
-  /* 💡 إصلاح حقول المقاسات والألوان (Size & Color) 💡 */
   .size-row {
-    flex-wrap: wrap; /* السماح للحقول بالنزول للسطر التالي */
+    flex-wrap: wrap;
     background: var(--bg4);
     padding: 15px;
     border-radius: 10px;
@@ -859,12 +842,12 @@ a { text-decoration: none; }
     margin-bottom: 10px;
   }
   .size-row input {
-    flex: 1 1 100% !important; /* كل حقل (مقاس، لون، كمية) يأخذ سطراً مستقلاً */
+    flex: 1 1 100% !important;
     margin-bottom: 8px;
     width: 100%;
   }
   .size-row button {
-    flex: 1 1 100% !important; /* زر الحذف يأخذ سطراً مستقلاً */
+    flex: 1 1 100% !important;
     margin-top: 5px;
     width: 100%;
   }
@@ -876,7 +859,7 @@ a { text-decoration: none; }
 }
 
 /* ══════════════════════════════════════════════════════
-   NEW FEATURES: NOTIFICATIONS PANEL
+   NOTIFICATIONS PANEL
 ══════════════════════════════════════════════════════ */
 .notif-panel {
   position: fixed; top: 64px; right: 16px; z-index: 300;
@@ -921,7 +904,7 @@ a { text-decoration: none; }
 }
 
 /* ══════════════════════════════════════════════════════
-   NEW FEATURES: USER MANAGEMENT
+   USER MANAGEMENT
 ══════════════════════════════════════════════════════ */
 .user-avatar-lg {
   width: 56px; height: 56px; border-radius: 50%;
@@ -946,7 +929,7 @@ a { text-decoration: none; }
 .role-viewer { background: rgba(148,163,184,.1); color: #94a3b8; border-color: rgba(148,163,184,.25); }
 
 /* ══════════════════════════════════════════════════════
-   NEW FEATURES: STATISTICS / REPORTS
+   STATISTICS / REPORTS
 ══════════════════════════════════════════════════════ */
 .stats-section-grid {
   display: grid; grid-template-columns: 1fr 1fr 1fr;
@@ -969,7 +952,6 @@ a { text-decoration: none; }
 .kpi-mini-val { font-family:'Cabinet Grotesk',sans-serif; font-size:1.5rem; font-weight:900; letter-spacing:-1px; color:var(--accent); }
 .kpi-mini-lbl { font-size:.72rem; color:var(--text3); text-transform:uppercase; letter-spacing:.07em; font-weight:700; margin-top:4px; }
 
-/* Print styles */
 .print-btn {
   background: rgba(96,165,250,.1); border: 1px solid rgba(96,165,250,.25);
   color: #60a5fa; padding: 7px 16px; border-radius: 10px;
@@ -987,7 +969,7 @@ a { text-decoration: none; }
 }
 
 /* ══════════════════════════════════════════════════════
-   NEW FEATURES: DATABASE BACKUP / RESTORE
+   DATABASE BACKUP / RESTORE
 ══════════════════════════════════════════════════════ */
 .backup-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
 .backup-card {
@@ -1014,12 +996,11 @@ a { text-decoration: none; }
 .backup-status-ok { color:#34d399; font-size:.78rem; font-weight:700; }
 .backup-status-err { color:#f87171; font-size:.78rem; font-weight:700; }
 
-/* Progress bar */
 .progress-bar-wrap { background:var(--bg4); border-radius:99px; height:8px; overflow:hidden; margin:12px 0; }
 .progress-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:99px; transition:width .4s ease; }
 
 /* ══════════════════════════════════════════════════════
-   NEW FEATURES: GLOBAL SEARCH
+   GLOBAL SEARCH
 ══════════════════════════════════════════════════════ */
 .global-search-overlay {
   position: fixed; inset:0; z-index:600;
@@ -1059,9 +1040,7 @@ a { text-decoration: none; }
 .global-result-info span { font-size:.75rem; color:var(--text3); }
 .search-kbd { font-size:.7rem; color:var(--text3); background:var(--bg4); border:1px solid var(--border); border-radius:6px; padding:2px 8px; white-space:nowrap; }
 
-/* ══════════════════════════════════════════════════════
-   NEW FEATURES: AUDIT LOG
-══════════════════════════════════════════════════════ */
+/* ── Audit Log ── */
 .audit-item {
   display:flex; align-items:flex-start; gap:14px;
   padding:14px 0; border-bottom:1px solid var(--border2);
@@ -1076,9 +1055,7 @@ a { text-decoration: none; }
 .audit-action strong { color:var(--accent); }
 .audit-time { font-size:.75rem; color:var(--text3); margin-top:3px; }
 
-/* ══════════════════════════════════════════════════════
-   NEW FEATURES: SYSTEM SETTINGS
-══════════════════════════════════════════════════════ */
+/* ── Settings ── */
 .settings-grid { display:grid; grid-template-columns:220px 1fr; gap:24px; }
 .settings-nav { display:flex; flex-direction:column; gap:4px; }
 .settings-nav-item {
@@ -1112,11 +1089,9 @@ a { text-decoration: none; }
 }
 .toggle-switch.on .toggle-switch-knob { left:22px; }
 
-/* Notification bell pulse */
 @keyframes bellPulse { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-15deg)} 40%{transform:rotate(15deg)} 60%{transform:rotate(-8deg)} 80%{transform:rotate(8deg)} }
 .bell-pulse { animation: bellPulse .5s ease; }
 
-/* Activity feed */
 .activity-feed { display:flex; flex-direction:column; gap:0; }
 .activity-feed-item {
   display:flex; gap:14px; padding:14px 0;
@@ -1133,9 +1108,7 @@ a { text-decoration: none; }
 .activity-text strong { color:var(--accent); }
 .activity-time { font-size:.74rem; color:var(--text3); margin-top:3px; }
 
-/* ══════════════════════════════════════════════════════
-   NEW FEATURES: QUICK ACTIONS FAB
-══════════════════════════════════════════════════════ */
+/* ── FAB ── */
 .fab-container { position:fixed; bottom:28px; right:28px; z-index:150; }
 .fab-main {
   width:54px; height:54px; border-radius:50%;
@@ -1171,9 +1144,6 @@ a { text-decoration: none; }
 }
 .fab-action-btn:hover { background:var(--accent-dim); color:var(--accent); border-color:rgba(0,200,150,.35); }
 
-/* ══════════════════════════════════════════════════════
-   RESPONSIVE ADDITIONS
-══════════════════════════════════════════════════════ */
 @media(max-width:900px) {
   .stats-section-grid { grid-template-columns:1fr; }
   .backup-grid { grid-template-columns:1fr; }
@@ -1184,9 +1154,7 @@ a { text-decoration: none; }
   .notif-panel { width:calc(100vw - 24px); right:12px; }
   .kpi-mini-row { grid-template-columns:1fr; }
 }
-   /* ══════════════════════════════════════════════════════
-   MOBILE FIXES FOR PRODUCT MODAL
-══════════════════════════════════════════════════════ */
+
 .size-row {
   display: flex;
   gap: 10px;
@@ -1206,24 +1174,23 @@ a { text-decoration: none; }
 }
 @media (max-width: 768px) {
   .size-row {
-    flex-wrap: wrap; /* السماح للحقول بالنزول للسطر التالي */
+    flex-wrap: wrap;
     background: var(--bg4);
     padding: 12px;
     border-radius: 10px;
     border: 1px solid var(--border);
   }
   .size-row input {
-    flex: 1 1 40% !important; /* الحقول تأخذ نصف الشاشة */
+    flex: 1 1 40% !important;
     min-width: 100px;
   }
   .size-row button {
-    flex: 1 1 100% !important; /* زر الحذف يأخذ سطراً كاملاً في الهاتف */
+    flex: 1 1 100% !important;
     margin-top: 5px;
   }
 }
 
-
-   /* --- ستايل حقول Coming Soon في لوحة التحكم --- */
+/* --- ستايل حقول Coming Soon في لوحة التحكم --- */
 .coming-soon-wrapper {
     background: var(--bg3, #121a24);
     border: 1.5px dashed var(--border, rgba(255,255,255,0.1));
@@ -1471,28 +1438,39 @@ a { text-decoration: none; }
           <h2 id="dash-greeting">Bonjour 👋</h2>
           <p id="dash-date"></p>
         </div>
+        
         <div class="stats-grid">
           <div class="stat-card" style="--c:#8b5cf6">
             <div class="stat-row1"><span class="stat-label">Ventes Totales</span><div class="stat-ico" style="background:rgba(139,92,246,.15);color:#a78bfa"><i class="fas fa-wallet"></i></div></div>
             <div class="stat-value" id="kpi-sales">—</div>
-            <div class="stat-foot g"><i class="fas fa-arrow-trend-up"></i> Cumul toutes périodes</div>
+            <div class="stat-foot g"><i class="fas fa-arrow-trend-up"></i> Chiffre d'Affaires</div>
           </div>
+          
+          <div class="stat-card" style="--c:#10b981">
+            <div class="stat-row1"><span class="stat-label">Bénéfice Net</span><div class="stat-ico" style="background:rgba(16,185,129,.15);color:#34d399"><i class="fas fa-coins"></i></div></div>
+            <div class="stat-value" id="kpi-net-profit" style="color:var(--accent);">—</div>
+            <div class="stat-foot g"><i class="fas fa-chart-line"></i> Bénéfice réel estimé</div>
+          </div>
+
+          <div class="stat-card" style="--c:#f59e0b">
+            <div class="stat-row1"><span class="stat-label">Coût de Revient</span><div class="stat-ico" style="background:rgba(245,158,11,.15);color:#fbbf24"><i class="fas fa-industry"></i></div></div>
+            <div class="stat-value" id="kpi-total-cost">—</div>
+            <div class="stat-foot y"><i class="fas fa-tags"></i> Coût total des ventes</div>
+          </div>
+
           <div class="stat-card" style="--c:#3b82f6">
             <div class="stat-row1"><span class="stat-label">Commandes</span><div class="stat-ico" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="fas fa-receipt"></i></div></div>
             <div class="stat-value" id="kpi-orders">—</div>
             <div class="stat-foot y"><i class="fas fa-clock"></i> <span id="kpi-pending-txt">0 en attente</span></div>
           </div>
-          <div class="stat-card" style="--c:#10b981">
-            <div class="stat-row1"><span class="stat-label">Produits actifs</span><div class="stat-ico" style="background:rgba(16,185,129,.15);color:#34d399"><i class="fas fa-boxes"></i></div></div>
+
+          <div class="stat-card" style="--c:#00c896">
+            <div class="stat-row1"><span class="stat-label">Produits actifs</span><div class="stat-ico" style="background:rgba(0,200,150,.15);color:#00c896"><i class="fas fa-boxes"></i></div></div>
             <div class="stat-value" id="kpi-products">—</div>
             <div class="stat-foot y"><i class="fas fa-exclamation-triangle"></i> <span id="kpi-lowstock-txt">0 stock faible</span></div>
           </div>
-          <div class="stat-card" style="--c:#f59e0b">
-            <div class="stat-row1"><span class="stat-label">Livreurs Actifs</span><div class="stat-ico" style="background:rgba(245,158,11,.15);color:#fbbf24"><i class="fas fa-truck"></i></div></div>
-            <div class="stat-value" id="kpi-livreurs">—</div>
-            <div class="stat-foot b"><i class="fas fa-map-marker-alt"></i> sur le terrain</div>
-          </div>
         </div>
+
         <!-- Charts -->
         <div class="dash-grid">
           <div class="card">
@@ -1574,7 +1552,7 @@ a { text-decoration: none; }
             <button class="btn btn-accent btn-sm" onclick="openProductModal(null)"><i class="fas fa-plus"></i> Nouveau Produit</button>
           </div>
         </div>
-        <div id="products-view-grid" class="products-grid" id="products-grid"></div>
+        <div id="products-view-grid" class="products-grid"></div>
         <div id="products-view-table" class="card" style="display:none">
           <div class="tbl-wrap">
             <table class="pro-table">
@@ -1719,7 +1697,6 @@ a { text-decoration: none; }
           <h2>Rapports & Statistiques</h2>
           <p>Analyse complète des performances de votre boutique.</p>
         </div>
-        <!-- KPI Mini Row -->
         <div class="kpi-mini-row" id="report-kpi-row">
           <div class="kpi-mini"><div class="kpi-mini-val" id="rpt-avg-order">—</div><div class="kpi-mini-lbl">Panier Moyen</div></div>
           <div class="kpi-mini"><div class="kpi-mini-val" id="rpt-delivery-rate">—</div><div class="kpi-mini-lbl">Taux de Livraison</div></div>
@@ -1728,7 +1705,6 @@ a { text-decoration: none; }
           <div class="kpi-mini"><div class="kpi-mini-val" id="rpt-today-orders">—</div><div class="kpi-mini-lbl">Commandes Aujourd'hui</div></div>
           <div class="kpi-mini"><div class="kpi-mini-val" id="rpt-review-avg">—</div><div class="kpi-mini-lbl">Note Moyenne</div></div>
         </div>
-        <!-- Three charts -->
         <div class="stats-section-grid">
           <div class="chart-card">
             <div class="chart-card-head">
@@ -1752,7 +1728,6 @@ a { text-decoration: none; }
             <div class="chart-card-body"><canvas id="rpt-products-chart" height="200"></canvas></div>
           </div>
         </div>
-        <!-- Reports Table -->
         <div class="card">
           <div class="card-head">
             <span class="card-title">Rapport Détaillé des Ventes</span>
@@ -1768,7 +1743,6 @@ a { text-decoration: none; }
             </table>
           </div>
         </div>
-        <!-- Top Products Report -->
         <div class="card" style="margin-top:18px">
           <div class="card-head">
             <span class="card-title">Top 10 Produits Vendus</span>
@@ -1787,7 +1761,6 @@ a { text-decoration: none; }
       <div class="section" id="sec-backup">
         <div class="section-hdr"><h2>Base de Données</h2><p>Sauvegardez, restaurez et gérez votre base de données.</p></div>
         <div class="backup-grid">
-          <!-- Backup -->
           <div class="backup-card">
             <div class="backup-icon" style="background:rgba(0,200,150,.12);color:var(--accent)"><i class="fas fa-download"></i></div>
             <div class="backup-title">Sauvegarde Manuelle</div>
@@ -1802,7 +1775,6 @@ a { text-decoration: none; }
               <div id="backup-history-list"><p style="color:var(--text3);font-size:.82rem">Aucune sauvegarde récente.</p></div>
             </div>
           </div>
-          <!-- Restore -->
           <div class="backup-card">
             <div class="backup-icon" style="background:rgba(96,165,250,.12);color:#60a5fa"><i class="fas fa-upload"></i></div>
             <div class="backup-title">Restauration</div>
@@ -1818,7 +1790,6 @@ a { text-decoration: none; }
             <button class="btn btn-ghost" style="border-color:rgba(96,165,250,.3);color:#60a5fa" onclick="runRestore()" id="restore-btn" disabled><i class="fas fa-undo"></i> Restaurer</button>
           </div>
         </div>
-        <!-- DB Stats -->
         <div class="card" style="margin-top:18px">
           <div class="card-head"><span class="card-title">Statistiques de la Base de Données</span><button class="card-action" onclick="refreshDbStats()"><i class="fas fa-sync-alt"></i> Actualiser</button></div>
           <div class="card-body">
@@ -2072,13 +2043,71 @@ a { text-decoration: none; }
         </div>
       </div>
 
-      <div class="form-row form-row-3">
-        <div class="fg">
-          <label for="prd-price">Prix (DA) *</label>
-          <input type="number" id="prd-price" placeholder="2500">
+      <!-- 💡 حاسبة تكاليف الإنتاج المرنة (Dynamic Cost Calculator) 💡 -->
+      <div class="cost-calc-wrapper" style="background: var(--bg3); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 18px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+          <h4 style="font-family: 'Cabinet Grotesk', sans-serif; font-size: 0.95rem; font-weight: 800; color: var(--accent); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-calculator"></i> Calculateur de Coût & Marge (Atelier)
+          </h4>
+          <span style="font-size: 0.72rem; background: var(--accent-dim); color: var(--accent); padding: 3px 8px; border-radius: 6px; font-weight: 700;">Prix flexibles atelier</span>
         </div>
+
+        <div class="form-row form-row-3">
+          <div class="fg">
+            <label for="prd-blank-cost">T-shirt Vierge (DA)</label>
+            <input type="number" id="prd-blank-cost" value="1000" min="0" oninput="calculateUnitEconomics()">
+          </div>
+          <div class="fg">
+            <label for="prd-packaging-cost">Packaging & Stickers (DA)</label>
+            <input type="number" id="prd-packaging-cost" value="150" min="0" oninput="calculateUnitEconomics()">
+          </div>
+          <div class="fg">
+            <label for="prd-price">Prix de Vente Final (DA) *</label>
+            <input type="number" id="prd-price" value="2800" min="0" style="border-color: var(--accent); font-weight: 800;" oninput="calculateUnitEconomics()">
+          </div>
+        </div>
+
+        <!-- أسطر DTF و Broderie المرنة (العدد × سعر القطعة الواحدة) -->
+        <div class="form-row form-row-2" style="margin-top: 10px; background: var(--bg2); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+          <div class="fg" style="margin-bottom: 0;">
+            <label style="color: var(--text);">Impression DTF</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="number" id="prd-dtf-count" value="1" min="0" placeholder="Nb" title="Nombre de DTF" style="flex: 1;" oninput="calculateUnitEconomics()">
+              <input type="number" id="prd-dtf-unit-price" value="200" min="0" placeholder="Prix unitaire (DA)" title="Prix par DTF" style="flex: 2;" oninput="calculateUnitEconomics()">
+            </div>
+            <small style="color: var(--text3); font-size: 0.7rem; margin-top: 3px;">Quantité × Prix par print</small>
+          </div>
+
+          <div class="fg" style="margin-bottom: 0;">
+            <label style="color: var(--text);">Broderie</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="number" id="prd-broderie-count" value="0" min="0" placeholder="Nb" title="Nombre de broderies" style="flex: 1;" oninput="calculateUnitEconomics()">
+              <input type="number" id="prd-broderie-unit-price" value="200" min="0" placeholder="Prix unitaire (DA)" title="Prix par broderie" style="flex: 2;" oninput="calculateUnitEconomics()">
+            </div>
+            <small style="color: var(--text3); font-size: 0.7rem; margin-top: 3px;">Quantité × Prix par broderie</small>
+          </div>
+        </div>
+
+        <!-- شريط الملخص المالي المباشر -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
+          <div style="background: var(--bg2); padding: 10px; border-radius: 10px; text-align: center;">
+            <span style="font-size: 0.7rem; color: var(--text3); text-transform: uppercase; font-weight: 700; display: block;">Coût de Revient</span>
+            <strong id="calc-cost-display" style="font-size: 1.1rem; color: #fbbf24;">—</strong>
+          </div>
+          <div style="background: var(--bg2); padding: 10px; border-radius: 10px; text-align: center;">
+            <span style="font-size: 0.7rem; color: var(--text3); text-transform: uppercase; font-weight: 700; display: block;">Bénéfice Net / Pièce</span>
+            <strong id="calc-profit-display" style="font-size: 1.1rem; color: #34d399;">—</strong>
+          </div>
+          <div style="background: var(--bg2); padding: 10px; border-radius: 10px; text-align: center;">
+            <span style="font-size: 0.7rem; color: var(--text3); text-transform: uppercase; font-weight: 700; display: block;">Marge Nette</span>
+            <strong id="calc-margin-pct" style="font-size: 1.1rem; color: var(--accent);">—</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row form-row-2">
         <div class="fg">
-          <label for="prd-compare">Prix barré (DA)</label>
+          <label for="prd-compare">Prix barré (DA) - Optionnel</label>
           <input type="number" id="prd-compare" placeholder="3500">
         </div>
         <div class="fg">
@@ -2123,19 +2152,20 @@ a { text-decoration: none; }
         <label for="prd-featured">⭐ Produit en vedette</label>
       </div>
     </div>
-<!-- قسم خيار قريباً (Coming Soon) المنسق -->
-<div class="coming-soon-wrapper">
-  <div class="coming-soon-checkbox-row">
-    <input type="checkbox" id="is_coming_soon" name="is_coming_soon">
-    <label for="is_coming_soon"><i class="fas fa-clock" style="color:var(--accent); margin-right:6px;"></i> Activer l'option "Coming Soon" (Bientôt disponible)</label>
-  </div>
 
-  <!-- حقل تاريخ ووقت الإتاحة للبيع التلقائي -->
-  <div id="date_picker_container" class="hidden">
-    <label for="available_at">Date de début de la vente automatique :</label>
-    <input type="datetime-local" id="available_at" name="available_at">
-  </div>
-</div>
+    <!-- قسم خيار قريباً (Coming Soon) المنسق -->
+    <div class="coming-soon-wrapper">
+      <div class="coming-soon-checkbox-row">
+        <input type="checkbox" id="is_coming_soon" name="is_coming_soon">
+        <label for="is_coming_soon"><i class="fas fa-clock" style="color:var(--accent); margin-right:6px;"></i> Activer l'option "Coming Soon" (Bientôt disponible)</label>
+      </div>
+
+      <div id="date_picker_container" class="hidden">
+        <label for="available_at">Date de début de la vente automatique :</label>
+        <input type="datetime-local" id="available_at" name="available_at">
+      </div>
+    </div>
+
     <!-- أسفل النافذة -->
     <div class="modal-foot">
       <button type="button" class="btn btn-ghost" onclick="closeModal('modal-product')">Annuler</button>
@@ -2143,6 +2173,7 @@ a { text-decoration: none; }
     </div>
   </div>
 </div>
+
 <!-- Category -->
 <div class="modal-overlay" id="modal-cat">
   <div class="modal-box modal-sm">
@@ -2283,7 +2314,7 @@ a { text-decoration: none; }
 
 <script>
 /* ═══════════════════════════════════════════════════════
-   ICOSIUM OS — Super Admin v3.0 — Full JS (Corrected)
+   ICOSIUM OS — Super Admin v3.0 — Full Script
 ═══════════════════════════════════════════════════════ */
 
 /* ─── SUPABASE ─── */
@@ -2773,6 +2804,41 @@ function renderActivityFeed() {
   `).join('');
 }
 
+/* ─── CALCUL UNIT ECONOMICS (COÛT & MARGE DYNAMIQUE) ─── */
+function calculateUnitEconomics() {
+  const blankCost = parseFloat(document.getElementById('prd-blank-cost')?.value) || 0;
+  const packaging = parseFloat(document.getElementById('prd-packaging-cost')?.value) || 0;
+  const sellingPrice = parseFloat(document.getElementById('prd-price')?.value) || 0;
+
+  const dtfCount = parseInt(document.getElementById('prd-dtf-count')?.value, 10) || 0;
+  const dtfUnitPrice = parseFloat(document.getElementById('prd-dtf-unit-price')?.value) || 0;
+
+  const broderieCount = parseInt(document.getElementById('prd-broderie-count')?.value, 10) || 0;
+  const broderieUnitPrice = parseFloat(document.getElementById('prd-broderie-unit-price')?.value) || 0;
+
+  const totalDtfCost = dtfCount * dtfUnitPrice;
+  const totalBroderieCost = broderieCount * broderieUnitPrice;
+  const totalCost = blankCost + totalDtfCost + totalBroderieCost + packaging;
+  const netProfit = sellingPrice - totalCost;
+  const marginPct = sellingPrice > 0 ? ((netProfit / sellingPrice) * 100).toFixed(1) : 0;
+
+  const costDisplay = document.getElementById('calc-cost-display');
+  const profitDisplay = document.getElementById('calc-profit-display');
+  const marginDisplay = document.getElementById('calc-margin-pct');
+
+  if (costDisplay) costDisplay.textContent = fmtPrice(totalCost);
+  if (profitDisplay) {
+    profitDisplay.textContent = (netProfit >= 0 ? '+' : '') + fmtPrice(netProfit);
+    profitDisplay.style.color = netProfit >= 0 ? '#34d399' : '#f87171';
+  }
+  if (marginDisplay) {
+    marginDisplay.textContent = `${marginPct}%`;
+    marginDisplay.style.color = marginPct >= 30 ? 'var(--accent)' : (marginPct > 0 ? '#fbbf24' : '#f87171');
+  }
+
+  return { totalCost, netProfit, marginPct, dtfUnitPrice, broderieUnitPrice };
+}
+
 /* ─── LOAD ALL ─── */
 async function loadAll() {
   try {
@@ -2799,19 +2865,48 @@ async function loadAll() {
     const aR = await dbFrom('admins').select('*');
     allUsers = aR.data || [];
 
-    const totalSales = allOrders.reduce((a, o) => a + parseFloat(o.total_price || 0), 0);
+    // 💡 خريطة تكاليف المنتجات لحساب رأس المال والأرباح الصافية
+    const productCostMap = Object.fromEntries(allProducts.map(p => [p.id, p.cost_price || (p.price * 0.5)]));
+
+    let totalRevenue = 0;
+    let totalEstimatedCost = 0;
+
+    allOrders.forEach(o => {
+      if (o.status !== 'Cancelled') {
+        const orderPrice = parseFloat(o.total_price || 0);
+        totalRevenue += orderPrice;
+
+        let items = o.items;
+        if (typeof items === 'string') {
+          try { items = JSON.parse(items); } catch(e) { items = []; }
+        }
+
+        if (Array.isArray(items)) {
+          items.forEach(it => {
+            const itemCost = productCostMap[it.product_id] || (parseFloat(it.price || 0) * 0.5);
+            totalEstimatedCost += (itemCost * (it.qty || 1));
+          });
+        }
+      }
+    });
+
+    const netProfit = totalRevenue - totalEstimatedCost;
     const pending = allOrders.filter(o => o.status === 'Pending');
     const lowStock = allProducts.filter(p => p.stock < 5);
     const activeLiv = allLivreurs.filter(l => l.is_active);
 
     const kpiSales = document.getElementById('kpi-sales');
+    const kpiNetProfit = document.getElementById('kpi-net-profit');
+    const kpiTotalCost = document.getElementById('kpi-total-cost');
     const kpiOrders = document.getElementById('kpi-orders');
     const kpiPendingTxt = document.getElementById('kpi-pending-txt');
     const kpiProducts = document.getElementById('kpi-products');
     const kpiLowStockTxt = document.getElementById('kpi-lowstock-txt');
     const kpiLivreurs = document.getElementById('kpi-livreurs');
 
-    if (kpiSales) kpiSales.textContent = fmtPrice(totalSales);
+    if (kpiSales) kpiSales.textContent = fmtPrice(totalRevenue);
+    if (kpiNetProfit) kpiNetProfit.textContent = (netProfit >= 0 ? '+' : '') + fmtPrice(netProfit);
+    if (kpiTotalCost) kpiTotalCost.textContent = fmtPrice(totalEstimatedCost);
     if (kpiOrders) kpiOrders.textContent = allOrders.length;
     if (kpiPendingTxt) kpiPendingTxt.textContent = `${pending.length} en attente`;
     if (kpiProducts) kpiProducts.textContent = allProducts.length;
@@ -3201,12 +3296,11 @@ function openOrderModal(o) {
   const wilayaMap = Object.fromEntries(allWilayas.map(w => [w.id, w.name]));
   const prodMap = Object.fromEntries(allProducts.map(p => [p.id, p]));
 
-  // استخراج الولاية سواء من wilaya_id أو تلقائياً من بداية العنوان
   let wilayaDisplay = wilayaMap[o.wilaya_id] || '';
   if (!wilayaDisplay && o.customer_address) {
     const parts = o.customer_address.split('-');
     if (parts.length > 1) {
-      wilayaDisplay = parts[1].trim(); // استخراج اسم الولاية من "16 - Alger - ..."
+      wilayaDisplay = parts[1].trim();
     } else {
       wilayaDisplay = parts[0].trim();
     }
@@ -3233,7 +3327,6 @@ function openOrderModal(o) {
   if (tbl) {
     tbl.innerHTML = (Array.isArray(items) && items.length) 
       ? items.map(i => {
-          // جلب صورة المنتج سواء من بيانات السلة أو من جدول المنتجات
           const matchedProd = prodMap[i.product_id];
           const imgUrl = i.image_url || matchedProd?.image_url || 'images/logo3.png';
 
@@ -3351,9 +3444,8 @@ function searchProducts(q) {
   if (catId) base = base.filter(p => String(p.category_id) === String(catId));
   renderProducts(base.filter(p => p.name?.toLowerCase().includes(q.toLowerCase()) || p.sku?.toLowerCase().includes(q.toLowerCase())));
 }
-/* ─── Product Modal & Images Handling ─── */
 
-// دالة رسم المعاينة مع زر الحذف وإمكانية التراكم
+/* ─── Product Modal & Images Handling ─── */
 function renderAllImages() {
   const container = document.getElementById('image-preview-container');
   if (!container) return;
@@ -3375,7 +3467,6 @@ function renderAllImages() {
     img.style.border = index === 0 ? '2px solid var(--accent)' : '1px solid var(--border)';
     wrapper.appendChild(img);
 
-    // وسم الصورة الرئيسية لأول صورة دائماً
     if (index === 0) {
       const badge = document.createElement('span');
       badge.textContent = 'Principale';
@@ -3392,7 +3483,6 @@ function renderAllImages() {
       wrapper.appendChild(badge);
     }
 
-    // زر حذف الصورة (x) لحذف صورة معينة دون مسح البقية
     const delBtn = document.createElement('button');
     delBtn.type = 'button';
     delBtn.innerHTML = '&times;';
@@ -3430,7 +3520,6 @@ function readFileAsDataURL(file) {
   });
 }
 
-// قراءة وعرض الصور مع دمجها تراكمياً
 document.addEventListener('DOMContentLoaded', () => {
   const prdFileInput = document.getElementById('prd-img-file');
   if (prdFileInput) {
@@ -3440,7 +3529,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const newImages = await Promise.all(files.map(file => readFileAsDataURL(file)));
-        // دمج الجديد مع السابق دون تصفير
         uploadedImages = uploadedImages.concat(newImages);
         renderAllImages();
         toast(files.length + ' image(s) ajoutée(s) !', 'ok');
@@ -3449,7 +3537,6 @@ document.addEventListener('DOMContentLoaded', () => {
         toast('Erreur lors du chargement des images.', 'err');
       }
 
-      // تصفير المدخل ليسمح باختيار ملفات إضافية متتالية
       e.target.value = '';
     });
   }
@@ -3472,7 +3559,6 @@ function addSizeRow(size = '', color = '', qty = '') {
   container.appendChild(row);
 }
 
-// تعديل دالة فتح نافذة المنتج لتعبئة تاريخ وحالة Coming Soon
 function openProductModal(p = null) {
   try {
     currentProductId = p?.id || null;
@@ -3486,23 +3572,31 @@ function openProductModal(p = null) {
 
     setVal('prd-name', p?.name || '');
     setVal('prd-sku', p?.sku || '');
-    setVal('prd-price', p?.price || '');
+    setVal('prd-price', p?.price || '2800');
     setVal('prd-compare', p?.compare_at_price || p?.compare_price || '');
     setVal('prd-stock', p?.stock || '');
     setVal('prd-cat', p?.category_id || '');
     setVal('prd-desc', p?.description || '');
+
+    // تعبئة حقول التكلفة المرنة
+    setVal('prd-blank-cost', p?.blank_cost !== undefined ? p.blank_cost : 1000);
+    setVal('prd-packaging-cost', p?.packaging_cost !== undefined ? p.packaging_cost : 150);
+    setVal('prd-dtf-count', p?.dtf_count !== undefined ? p.dtf_count : 1);
+    setVal('prd-dtf-unit-price', p?.dtf_unit_price !== undefined ? p.dtf_unit_price : 200);
+    setVal('prd-broderie-count', p?.broderie_count !== undefined ? p.broderie_count : 0);
+    setVal('prd-broderie-unit-price', p?.broderie_unit_price !== undefined ? p.broderie_unit_price : 200);
+
+    calculateUnitEconomics();
     
     const featEl = document.getElementById('prd-featured');
     if (featEl) featEl.checked = p?.is_featured || false;
 
-    // 💡 تعبئة خيار Coming Soon وتاريخ الإتاحة 💡
     const csToggle = document.getElementById('is_coming_soon');
     const dateContainer = document.getElementById('date_picker_container');
     const dateInput = document.getElementById('available_at');
 
     if (csToggle) csToggle.checked = p?.is_coming_soon || false;
     if (p?.available_at && dateInput) {
-      // تنسيق التاريخ ليتناسب مع datetime-local
       const d = new Date(p.available_at);
       d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
       dateInput.value = d.toISOString().slice(0, 16);
@@ -3558,7 +3652,6 @@ function openProductModal(p = null) {
   }
 }
 
-// تعديل دالة الحفظ لتشمل خيارات Coming Soon
 async function saveProduct() {
   try {
     const name = document.getElementById('prd-name')?.value.trim();
@@ -3589,10 +3682,20 @@ async function saveProduct() {
     const mainImage = uploadedImages.length > 0 ? uploadedImages[0] : null;
     const extraImagesArray = uploadedImages.length > 1 ? uploadedImages.slice(1) : [];
 
-    // 💡 تصحيح قراءة وعمل حقل Coming Soon والتاريخ ليتوافق مع Supabase 💡
     const isComingSoon = document.getElementById('is_coming_soon')?.checked || false;
     const availableAtVal = document.getElementById('available_at')?.value;
     const availableAt = (isComingSoon && availableAtVal) ? new Date(availableAtVal).toISOString() : null;
+
+    // قراءة وحساب التكاليف المرنة
+    const blankCost = parseFloat(document.getElementById('prd-blank-cost')?.value) || 1000;
+    const packagingCost = parseFloat(document.getElementById('prd-packaging-cost')?.value) || 0;
+    const dtfCount = parseInt(document.getElementById('prd-dtf-count')?.value, 10) || 0;
+    const dtfUnitPrice = parseFloat(document.getElementById('prd-dtf-unit-price')?.value) || 0;
+    const broderieCount = parseInt(document.getElementById('prd-broderie-count')?.value, 10) || 0;
+    const broderieUnitPrice = parseFloat(document.getElementById('prd-broderie-unit-price')?.value) || 0;
+
+    const costPrice = blankCost + (dtfCount * dtfUnitPrice) + (broderieCount * broderieUnitPrice) + packagingCost;
+    const profitMargin = price - costPrice;
 
     const payload = {
       name,
@@ -3608,6 +3711,14 @@ async function saveProduct() {
       is_featured: document.getElementById('prd-featured')?.checked || false,
       is_coming_soon: isComingSoon,
       available_at: availableAt,
+      blank_cost: blankCost,
+      dtf_count: dtfCount,
+      dtf_unit_price: dtfUnitPrice,
+      broderie_count: broderieCount,
+      broderie_unit_price: broderieUnitPrice,
+      packaging_cost: packagingCost,
+      cost_price: costPrice,
+      profit_margin: profitMargin,
       is_deleted: false
     };
 
@@ -3616,7 +3727,7 @@ async function saveProduct() {
       : await dbFrom('products').insert([payload]);
 
     if (!error) {
-      toast(currentProductId ? 'Produit modifié !' : 'Produit créé !');
+      toast(currentProductId ? 'Produit modifié avec succès !' : 'Produit créé avec succès !');
       closeModal('modal-product');
       await loadAll();
     } else {
@@ -3628,6 +3739,7 @@ async function saveProduct() {
     toast("Erreur lors de l'enregistrement", "err");
   }
 }
+
 async function deleteProduct(id) {
   if (!confirm('Voulez-vous DÉFINITIVEMENT supprimer ce produit ? Cette action est irréversible.')) return;
 
@@ -3893,6 +4005,7 @@ async function deleteCoupon(id) {
   toast('Coupon supprimé.'); 
   await loadAll(); 
 }
+
 /* ─── REVIEWS ─── */
 function renderReviews(reviews) {
   const el = document.getElementById('reviews-list');
@@ -3946,10 +4059,9 @@ function filterReviews(f, btn) {
   renderReviews(allReviews);
 }
 
-// 💡 دالة تأكيد الرأي (مربوطة بـ window ومحمية)
 window.approveReview = async function(id) {
   try {
-    const { data, error } = await dbFrom('reviews')
+    const { error } = await dbFrom('reviews')
       .update({ is_approved: true })
       .eq('id', id)
       .select();
@@ -3965,7 +4077,6 @@ window.approveReview = async function(id) {
   }
 };
 
-// 💡 دالة حذف الرأي نهائياً (مربوطة بـ window ومحمية)
 window.deleteReview = async function(id) {
   if (!confirm('Voulez-vous vraiment supprimer cet avis ?')) return;
   try {
@@ -4420,6 +4531,4 @@ function renderGallery() {
 </body>
 
 </html>
-
-
 
