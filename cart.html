@@ -46,48 +46,76 @@
             </div>
 
             <div class="cart-form-section">
-                <div class="cart-summary-box">
-                    <h3 data-key="checkout_delivery_details">Détails de livraison</h3>
-                    <form id="checkout-form-page">
-                        <div class="input-group">
-                            <label data-key="form_name">Nom Complet</label>
-                            <input type="text" id="checkout-name" required placeholder="Votre nom">
-                        </div>
-                        <div class="input-group">
-                            <label data-key="form_phone">Téléphone</label>
-                            <input type="tel" id="checkout-phone" required placeholder="05...">
-                        </div>
-                        <div class="input-group">
-                            <label data-key="form_wilaya">Wilaya</label>
-                            <select id="checkout-wilaya" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-                                <option value="" disabled selected data-key="select_wilaya">Choisir Wilaya</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label data-key="form_address">Adresse (Commune/Rue)</label>
-                            <input type="text" id="checkout-address" required placeholder="Adresse précise">
-                        </div>
+             <div class="cart-summary-box">
+    <div class="checkout-box-header">
+        <i class="fas fa-truck-fast"></i>
+        <h3 data-key="checkout_delivery_details">Détails de livraison</h3>
+    </div>
+    
+    <form id="checkout-form-page">
+        <div class="checkout-field">
+            <label for="checkout-name" data-key="form_name">Nom Complet</label>
+            <div class="input-wrapper">
+                <i class="fas fa-user"></i>
+                <input type="text" id="checkout-name" required placeholder="Votre nom et prénom">
+            </div>
+        </div>
 
-                        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <div class="checkout-field">
+            <label for="checkout-phone" data-key="form_phone">Numéro de Téléphone</label>
+            <div class="input-wrapper">
+                <i class="fas fa-phone"></i>
+                <input type="tel" id="checkout-phone" required placeholder="05 / 06 / 07...">
+            </div>
+        </div>
 
-                        <div class="price-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span data-key="cart_subtotal">Sous-total:</span>
-                            <span><span id="cart-total-price-page">0</span> DZD</span>
-                        </div>
-                        <div class="price-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span data-key="delivery_fee">Livraison:</span>
-                            <span><span id="delivery-fee-display">0</span> DZD</span>
-                        </div>
-                        <div class="price-row total" style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: var(--color-primary);">
-                            <span data-key="cart_final_total">Total Final:</span>
-                            <span><span id="final-total-price">0</span> DZD</span>
-                        </div>
+        <div class="checkout-field">
+            <label for="checkout-wilaya" data-key="form_wilaya">Wilaya de livraison</label>
+            <div class="input-wrapper">
+                <i class="fas fa-map-location-dot"></i>
+                <select id="checkout-wilaya" required>
+                    <option value="" disabled selected data-key="select_wilaya">Choisir Wilaya</option>
+                </select>
+            </div>
+        </div>
 
-                        <button type="submit" id="checkout-submit-btn" style="width: 100%; padding: 15px; background: var(--color-primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 20px;">
-                            <span data-key="form_confirm">Confirmer la commande</span>
-                        </button>
-                    </form>
-                </div>
+        <div class="checkout-field">
+            <label for="checkout-address" data-key="form_address">Adresse de livraison (Commune / Quartier)</label>
+            <div class="input-wrapper">
+                <i class="fas fa-location-dot"></i>
+                <input type="text" id="checkout-address" required placeholder="Ex: Bab Ezzouar, Cité...">
+            </div>
+        </div>
+
+        <div class="checkout-divider"></div>
+
+        <!-- ملخص الأسعار -->
+        <div class="checkout-pricing">
+            <div class="price-line">
+                <span data-key="cart_subtotal">Sous-total</span>
+                <span><strong id="cart-total-price-page">0</strong> DZD</span>
+            </div>
+            <div class="price-line">
+                <span data-key="delivery_fee">Frais de livraison</span>
+                <span><strong id="delivery-fee-display">0</strong> DZD</span>
+            </div>
+            <div class="price-line total-highlight">
+                <span data-key="cart_final_total">Total Final</span>
+                <span class="total-amount"><span id="final-total-price">0</span> DZD</span>
+            </div>
+        </div>
+
+        <!-- زر التأكيد -->
+        <button type="submit" id="checkout-submit-btn" class="btn-confirm-order">
+            <i class="fas fa-shield-halved"></i>
+            <span data-key="form_confirm">Confirmer la commande</span>
+        </button>
+
+        <p class="cod-hint">
+            <i class="fas fa-hand-holding-dollar"></i> Paiement en espèces à la livraison
+        </p>
+    </form>
+</div>
             </div>
 
         </div>
