@@ -1253,3 +1253,19 @@ html[dir="rtl"] .cbn-sticker-side {
     color: #b91c1c;
     transform: scale(1.15);
 }
+/* مؤشر النقر والتأثير عند تمرير الفأرة على صورة السلة */
+.cart-thumb-click {
+    cursor: zoom-in;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cart-thumb-click:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(0, 200, 150, 0.3);
+}
+
+/* تنسيق نافذة العرض المكبرة */
+#image-lightbox-modal {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+}
