@@ -1269,3 +1269,37 @@ html[dir="rtl"] .cbn-sticker-side {
     background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(8px);
 }
+/* زر دليل المقاسات داخل نافذة المنتج */
+.size-guide-link {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: underline;
+    transition: opacity 0.2s ease;
+    padding: 0;
+}
+
+.size-guide-link:hover {
+    opacity: 0.8;
+}
+
+/* جدول المقاسات */
+.size-table th {
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.size-table td {
+    color: var(--color-text);
+}
+
+body.dark-mode #size-guide-modal .modal-content {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+}
