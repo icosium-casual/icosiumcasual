@@ -1303,3 +1303,177 @@ body.dark-mode #size-guide-modal .modal-content {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
 }
+/* --- بطاقة معلومات الشحن المحسنة --- */
+.cart-summary-box {
+    background: var(--color-bg-card, #ffffff);
+    border: 1px solid var(--color-border, #e8e4dc);
+    border-radius: 20px;
+    padding: 30px 26px;
+    box-shadow: 0 10px 35px var(--color-shadow, rgba(0, 0, 0, 0.05));
+    position: sticky;
+    top: 95px;
+}
+
+.checkout-box-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--color-border, #e8e4dc);
+}
+
+.checkout-box-header i {
+    font-size: 1.4rem;
+    color: var(--color-primary, #0a6e6e);
+}
+
+.checkout-box-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--color-text, #1a1a1a);
+}
+
+/* الحقول والمدخلات */
+.checkout-field {
+    margin-bottom: 16px;
+}
+
+.checkout-field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted, #777);
+    margin-bottom: 7px;
+}
+
+.checkout-field .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.checkout-field .input-wrapper i {
+    position: absolute;
+    left: 14px;
+    color: var(--color-text-muted, #999);
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+
+html[dir="rtl"] .checkout-field .input-wrapper i {
+    left: auto;
+    right: 14px;
+}
+
+.checkout-field input,
+.checkout-field select {
+    width: 100% !important;
+    padding: 12px 14px 12px 42px !important;
+    border: 1.5px solid var(--color-border, #e8e4dc) !important;
+    border-radius: 10px !important;
+    background: var(--color-bg, #f5f3ef) !important;
+    color: var(--color-text, #1a1a1a) !important;
+    font-family: var(--font-body) !important;
+    font-size: 0.92rem !important;
+    outline: none !important;
+    transition: all 0.25s ease !important;
+}
+
+html[dir="rtl"] .checkout-field input,
+html[dir="rtl"] .checkout-field select {
+    padding: 12px 42px 12px 14px !important;
+}
+
+.checkout-field input:focus,
+.checkout-field select:focus {
+    border-color: var(--color-primary, #0a6e6e) !important;
+    background: var(--color-bg-card, #ffffff) !important;
+    box-shadow: 0 0 0 3px rgba(10, 110, 110, 0.12) !important;
+}
+
+/* الفاصل والأسعار */
+.checkout-divider {
+    height: 1px;
+    background: var(--color-border, #e8e4dc);
+    margin: 22px 0 18px;
+}
+
+.checkout-pricing {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.price-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.92rem;
+    color: var(--color-text-muted, #666);
+}
+
+.price-line strong {
+    color: var(--color-text, #1a1a1a);
+}
+
+.price-line.total-highlight {
+    margin-top: 6px;
+    padding-top: 12px;
+    border-top: 1.5px dashed var(--color-border, #e8e4dc);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--color-text, #1a1a1a);
+}
+
+.price-line.total-highlight .total-amount {
+    color: var(--color-primary, #0a6e6e);
+    font-size: 1.35rem;
+}
+
+/* زر تأكيد الطلب */
+.btn-confirm-order {
+    width: 100%;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, var(--color-primary, #0a6e6e), #00a87e);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(0, 168, 126, 0.28);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-confirm-order:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0, 168, 126, 0.38);
+}
+
+.btn-confirm-order:active {
+    transform: scale(0.98);
+}
+
+/* تلميح الدفع عند الاستلام */
+.cod-hint {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--color-text-muted, #777);
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
