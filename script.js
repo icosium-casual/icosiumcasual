@@ -581,23 +581,38 @@ function renderCartPage() {
     const totalEl = document.getElementById('cart-total-price-page');
     if (!container) return;
 
+    const t = translations[currentLanguage];
     container.innerHTML = '';
     let subtotal = 0;
 
     if (!cart.length) {
-        container.innerHTML = '<p style="text-align:center; padding:30px; color:var(--color-text-muted);">Votre panier est vide.</p>';
+        container.innerHTML = `<p style="text-align:center; padding:30px; color:var(--color-text-muted);">${t.cart_empty}</p>`;
     } else {
+        const colorLabel = currentLanguage === 'ar' ? 'اللون' : (currentLanguage === 'en' ? 'Color' : 'Couleur');
+        const sizeLabel = currentLanguage === 'ar' ? 'المقاس' : (currentLanguage === 'en' ? 'Size' : 'Taille');
+        const qtyLabel = currentLanguage === 'ar' ? 'الكمية' : (currentLanguage === 'en' ? 'Qty' : 'Qté');
+
         cart.forEach((item, i) => {
             subtotal += item.price;
             container.innerHTML += `
-                <div class="cart-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--color-border);">
-                    <div class="cart-item-info">
-                        <h4 style="margin:0; font-size:1rem;">${item.name}</h4>
-                        <small style="color:var(--color-text-muted);">Couleur: ${item.color || '-'} | Taille: ${item.size || '-'} | Qté: <strong>${item.qty || 1}</strong></small>
+                <div class="cart-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--color-border); gap: 14px;">
+                    <div style="display:flex; align-items:center; gap:14px; min-width:0;">
+                        <!-- صورة المنتج المصغرة -->
+                        <img src="${item.image_url || 'images/logo3.png'}" alt="${item.name}" 
+                             style="width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 1.5px solid var(--color-border); flex-shrink: 0; background: var(--color-bg);"
+                             onerror="this.src='images/logo3.png'">
+                        
+                        <div class="cart-item-info">
+                            <h4 style="margin:0 0 4px 0; font-size:1rem; font-weight:700;">${item.name}</h4>
+                            <small style="color:var(--color-text-muted); font-size:0.82rem; display:block;">
+                                ${colorLabel}: <strong>${item.color || '-'}</strong> | ${sizeLabel}: <strong>${item.size || '-'}</strong> | ${qtyLabel}: <strong>${item.qty || 1}</strong>
+                            </small>
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:16px;">
-                        <span style="font-weight:700; color:var(--color-primary);">${item.price} DZD</span>
-                        <i class="fas fa-trash" style="color:#ef4444; cursor:pointer; font-size:1.1rem;" onclick="removeFromCart(${i})"></i>
+
+                    <div style="display:flex; align-items:center; gap:16px; flex-shrink: 0;">
+                        <span style="font-weight:700; color:var(--color-primary); font-size: 1.05rem; white-space: nowrap;">${item.price} DZD</span>
+                        <i class="fas fa-trash remove-btn" title="Supprimer" onclick="removeFromCart(${i})"></i>
                     </div>
                 </div>
             `;
