@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICOSIUM-STORE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="images/logo3.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body> 
+   <header class="main-header">
+        <div class="header-container">
+            <button id="burger-menu-btn" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">
+                <img src="images/logo3.png" alt="Icosium Logo" class="brand-logo">
+                ICOSIUM
+            </div>
+            <nav class="main-nav" id="main-nav">
+                <span id="close-nav-btn">&times;</span>
+                <a href="#" onclick="location.reload()" data-key="nav_home">Accueil</a>
+                <div class="dropdown">
+                    <button class="dropbtn" data-key="nav_category">Catégorie <i class="fas fa-chevron-down"></i></button>
+                    <div class="dropdown-content"></div>
+                </div>
+                <a href="#promotions-section" data-key="nav_promos">Promotions</a>
+                <a href="#reviews-section" data-key="nav_reviews">Avis</a>
+                <a href="#about-section" data-key="nav_about">À Propos</a>
+                <a href="#contact-section" data-key="nav_contact">Contact</a>
+            </nav>
+            <div id="nav-overlay"></div>
+            <div class="header-controls">
+                <div class="search-bar">
+                    <input type="text" id="search-input" placeholder="Rechercher...">
+                    <button id="search-button"><i class="fas fa-search"></i></button>
+                </div>
+                <button id="cart-button"><i class="fas fa-shopping-cart"></i> <span id="cart-count">0</span></button>
+                <button id="profile-button"><i class="fas fa-user"></i></button>
+                <button id="dark-mode-toggle"><i class="fas fa-moon"></i></button>
+                <select id="language-switcher">
+                    <option value="fr">FR</option>
+                    <option value="ar">AR</option> 
+                    <option value="en">EN</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- TRUST BAR -->
+    <div class="trust-bar">
+        <div class="trust-bar-inner">
+            <div class="trust-item">
+                <i class="fas fa-shipping-fast"></i>
+                <span data-key="trust_delivery">Livraison rapide</span>
+            </div>
+            <div class="trust-item">
+                <i class="fas fa-lock"></i>
+                <span data-key="trust_secure">Paiement à la livraison</span>
+            </div>
+            <div class="trust-item">
+                <i class="fas fa-undo-alt"></i>
+                <span data-key="trust_return">Retour 7 jours</span>
+            </div>
+            <div class="trust-item">
+                <i class="fas fa-headset"></i>
+                <span data-key="trust_support">Support client 7j/7</span>
+            </div>
+        </div>
+    </div>
+
+    <main>
+        <!-- HERO -->
+        <section id="explore-section" class="hero-section">
+            <div class="hero-content">
+                <span class="hero-badge" data-key="hero_badge">✦ Nouvelle Collection 2026</span>
+                <h1 data-key="hero_title">Découvrez notre<br>nouvelle collection</h1>
+                <p data-key="hero_subtitle">Design moderne, qualité supérieure</p>
+                <div class="hero-actions">
+                    <button id="scroll-to-products" class="btn-primary-hero" data-key="hero_btn_buy">Acheter maintenant</button>
+                    <a href="#about-section" class="btn-ghost-hero" data-key="hero_btn_about">Notre histoire →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRODUCTS -->
+        <section id="products-section" class="container">
+          <div class="section-header-row">
+            <h2 data-key="products_title" class="section-title">Nos Produits</h2>
+            <div class="cbn-sticker-side">
+                <div class="scotch-tape"></div>
+                <img src="casual-by-nature.png" alt="Casual" class="sticker-img">
+            </div>
+          </div>
+            
+          <div id="categories-filter"></div>
+          <div id="products-grid"></div>
+        </section>
+
+        <!-- ABOUT -->
+        <section id="about-section">
+            <div class="about-content-wrapper">
+                <h2 data-key="about_title">À propos d'ICOSIUM</h2>
+                <div class="about-story">
+                    <p data-key="about_history_text"></p>
+                </div>
+                <hr class="about-divider">
+                <div class="about-philosophy">
+                    <h3 data-key="about_why_title">Pourquoi nous choisir</h3>
+                    <p data-key="about_why_text"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- REVIEWS -->
+        <section id="reviews-section" class="container">
+            <div class="section-header-wrapper" style="text-align:center;margin-bottom:30px;">
+                <h2 data-key="reviews_title" class="section-title">Avis Clients</h2>
+                <button id="open-review-modal-btn" class="add-review-btn" type="button" data-key="btn_write_review">Écrire un avis</button>
+            </div>
+            <div class="reviews-container"></div>
+        </section>
+        
+        <!-- CONTACT -->
+      <!-- CONTACT -->
+        <section id="contact-section">
+            <div class="section-header">
+                <i class="fas fa-phone-alt icon-title"></i>
+                <h2 data-key="contact_title">Contact</h2>
+            </div>
+            <div class="contact-container">
+                <div class="contact-form-box">
+                    <h3 data-key="contact_message_title">Contactez-nous directement</h3>
+                    <form id="contact-form">
+                        <div class="input-group">
+                            <input type="text" id="contact-name" required placeholder="Votre Nom Complet">
+                        </div>
+                        <div class="input-group">
+                            <input type="email" id="contact-email" required placeholder="Votre Email">
+                        </div>
+                        <div class="input-group">
+                            <textarea id="contact-message" rows="4" required placeholder="Votre Message..."></textarea>
+                        </div>
+                        <button type="submit" id="contact-submit-btn" data-key="contact_send">Envoyer</button>
+                        <p id="contact-status"></p>
+                    </form>
+                </div>
+                <div class="contact-info-box">
+                    <h3 data-key="contact_connect_title">Restons Connectés</h3>
+                    <div class="direct-info">
+                        <div class="info-row">
+                            <span class="icon-box gmail-icon"><i class="fas fa-envelope"></i></span>
+                            <p>icosiumcasual@gmail.com</p>
+                        </div>
+                        <!-- رقم الهاتف تحت الإيميل مباشرة -->
+                        <div class="info-row">
+                            <span class="icon-box phone-icon"><i class="fas fa-phone"></i></span>
+                            <p dir="ltr">+213 780 33 19 79</p>
+                        </div>
+                    </div>
+                    <!-- شبكات التواصل: إنستغرام، تيك توك، يوتيوب، فيسبوك -->
+                    <div class="social-buttons-grid">
+                        <a href="https://www.instagram.com/icosium.casual?igsh=bHhsaXo3eGhvc3F3&utm_source=qr" target="_blank" class="social-btn insta">
+                            <i class="fab fa-instagram"></i> <span>Instagram</span>
+                        </a>
+                        <a href="https://www.tiktok.com/@icosium.casual" target="_blank" class="social-btn tiktok">
+                            <i class="fab fa-tiktok"></i> <span>TikTok</span>
+                        </a>
+                        <a href="https://www.youtube.com/@ICOSIUMCASUAL" target="_blank" class="social-btn youtube">
+                            <i class="fab fa-youtube"></i> <span>YouTube</span>
+                        </a>
+                        <a href="https://www.facebook.com/icosium.casual/?rdid=kiUVq54cfOGTbsXm" target="_blank" class="social-btn facebook">
+                            <i class="fab fa-facebook-f"></i> <span>Facebook</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>    </main>
+
+ <!-- PRODUCT DETAILS MODAL (UPGRADED) -->
+    <div id="product-details-modal" class="modal">
+        <div class="modal-content product-modal-content">
+            <span class="close-btn" id="close-product-details">&times;</span>
+            
+            <div class="modal-body" style="position: relative;">
+                <!-- طبقة حجب Coming Soon -->
+                <div id="modal-coming-soon-overlay" class="coming-soon-overlay" style="display: none;">
+                    <div class="cs-badge">COMING SOON</div>
+                    <h3 class="cs-title" data-key="cs_title">Bientôt Disponible</h3>
+                    <p class="cs-desc" data-key="cs_desc">Ce produit n'est pas encore disponible à la vente.</p>
+                    <div id="cs-countdown" class="cs-timer"></div>
+                </div>
+
+                <!-- قسم الصور والتكبير الحر -->
+                <div class="modal-image-container">
+                <div class="main-image-zoom-box" id="zoom-container">
+    <!-- أسهم التنقل بين الصور -->
+    <button type="button" class="modal-nav-arrow prev-arrow" id="modal-prev-img" aria-label="Précédent">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    <button type="button" class="modal-nav-arrow next-arrow" id="modal-next-img" aria-label="Suivant">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+
+    <img id="modal-product-image" src="" alt="Product Image">
+    <span id="modal-discount-badge" class="modal-discount-tag" style="display:none;"></span>
+</div>
+                    <!-- شريط مصغرات الصور الإضافية -->
+                    <div id="modal-thumbnails-strip" class="thumbnails-strip"></div>
+                </div>
+
+                <!-- قسم التفاصيل والخيارات -->
+                <div class="modal-info-container">
+                    <div class="modal-product-meta">
+                        <div id="modal-product-stars" class="modal-stars">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            <span id="modal-rating-count" style="font-size:0.8rem; color:var(--text3); margin-left:6px;">(5.0)</span>
+                        </div>
+                    </div>
+
+                    <h2 id="modal-product-name" style="margin: 8px 0 12px; font-size:1.6rem; font-weight:800;"></h2>
+
+                    <div class="modal-price-row" style="display:flex; align-items:baseline; gap:12px; margin-bottom:14px;">
+                        <h3 id="modal-product-price" class="modal-price" style="font-size:1.5rem; color:var(--color-primary, #00c896); font-weight:800;"></h3>
+                        <del id="modal-product-old-price" style="color:var(--text3, #8fa3bb); font-size:1.1rem; display:none;"></del>
+                    </div>
+
+                    <p id="modal-product-desc" class="product-desc-text" style="line-height:1.6; margin-bottom:16px; color:var(--text2, #8fa3bb);"></p>
+
+                    <!-- خيارات الألوان والمقاسات والكمية -->
+                    <div id="modal-product-options"></div>
+
+                    <!-- أزرار العمليات -->
+                    <div class="modal-actions" style="margin-top:20px;">
+                        <button id="modal-add-to-cart-btn" class="add-to-cart-btn btn-cart-modal" style="width:100%;">
+                            <i class="fas fa-shopping-cart"></i> <span data-key="btn_add_cart">Ajouter au panier</span>
+                        </button>
+                    </div>
+
+                    <!-- مميزات المتجر السريعة -->
+                    <div class="modal-trust-mini" style="margin-top:20px; display:flex; gap:15px; border-top:1px solid var(--border, #eee); padding-top:15px;">
+                        <span><i class="fas fa-shipping-fast" style="color:var(--color-primary, #00c896)"></i> <span data-key="modal_delivery">Livraison rapide</span></span>
+                        <span><i class="fas fa-undo-alt" style="color:var(--color-primary, #00c896)"></i> <span data-key="trust_return">Retour 7j</span></span>
+                        <span><i class="fas fa-shield-alt" style="color:var(--color-primary, #00c896)"></i> <span data-key="modal_secure">Paiement sécurisé</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REVIEW MODAL -->
+    <div id="review-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-review-modal">&times;</span>
+            <h2 data-key="review_form_title">Partagez votre avis</h2>
+            <form id="add-review-form">
+                <div class="star-rating-input">
+                    <span class="star-input" data-value="1"><i class="far fa-star"></i></span>
+                    <span class="star-input" data-value="2"><i class="far fa-star"></i></span>
+                    <span class="star-input" data-value="3"><i class="far fa-star"></i></span>
+                    <span class="star-input" data-value="4"><i class="far fa-star"></i></span>
+                    <span class="star-input" data-value="5"><i class="far fa-star"></i></span>
+                    <input type="hidden" id="rating-value" required> 
+                </div>
+                <p id="rating-text" style="text-align:center;color:#888;">0/5</p>
+                <div class="input-group">
+                    <label data-key="form_name">Nom:</label>
+                    <input type="text" id="review-name" required placeholder="Votre Nom">
+                </div>
+                <div class="input-group">
+                    <label data-key="form_city">Ville:</label>
+                    <input type="text" id="review-location" placeholder="Alger, Oran...">
+                </div>
+                <div class="input-group">
+                    <label data-key="form_review">Avis:</label>
+                    <textarea id="review-text" rows="4" required placeholder="Votre commentaire..."></textarea>
+                </div>
+                <button type="submit" class="add-to-cart-btn" data-key="contact_send">Envoyer</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-trust">
+                <span><i class="fas fa-shipping-fast"></i> <span data-key="trust_delivery">Livraison rapide</span></span>
+                <span><i class="fas fa-lock"></i> <span data-key="trust_secure">Paiement à la livraison</span></span>
+                <span><i class="fas fa-undo-alt"></i> <span data-key="trust_return">Retour 7 jours</span></span>
+                <span><i class="fas fa-headset"></i> <span data-key="trust_support">Support 7j/7</span></span>
+            </div>
+            <p>&copy; 2026 <strong>ICOSIUM STORE</strong>. <span data-key="footer_rights">Tous droits réservés.</span></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>
