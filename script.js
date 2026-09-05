@@ -28,10 +28,17 @@ about_history_text: "في عام 140 قبل الميلاد، أسس الفيني
         profile_login: "تسجيل الدخول", profile_soon: "قريباً...",
         btn_details: "التفاصيل", btn_add_cart: "أضف إلى السلة", btn_soon: "قريباً",
         cs_title: "قريباً في المتجر", cs_desc: "هذا المنتج غير متوفر للبيع حالياً.",
-        modal_delivery: "توصيل 48 ساعة", modal_secure: "دفع آمن",
+        modal_delivery: "توصيل 48 ساعة", modal_secure: "دفع آمن",size_guide_btn: "دليل المقاسات",
+        size_guide_title: "دليل المقاسات",
+        size_guide_subtitle: "القياسات بالسنتيمتر (سم) للتيشيرتات",
+        th_size: "المقاس",
+        th_chest: "العرض (الصدر)",
+        th_length: "الطول",
+        size_guide_tip: "نصيحة: إذا كنت تفضل مظهراً فضفاضاً (Oversized) ومتردداً بين مقاسين، اختر المقاس الأكبر.",
         alert_color: "يرجى اختيار اللون", alert_size: "يرجى اختيار المقاس", alert_rating: "يرجى تقييم المنتج باختيار النجوم", alert_added: "تمت الإضافة للسلة بنجاح!", alert_order_success: "تم إرسال طلبك بنجاح! شكراً لثقتكم.", alert_review_success: "شكراً لمشاركتنا رأيك!",
         colors: "الألوان:", sizes: "المقاسات:", quantity: "الكمية", search_placeholder: "ابحث عن منتج...",
         footer_rights: "جميع الحقوق محفوظة."
+       
     },
     fr: {
         out_of_stock: "Rupture de stock",
@@ -56,7 +63,13 @@ about_history_text: "En 140 av. J.-C., les Phéniciens fondèrent Ikosim en Afri
         modal_delivery: "Livraison 48h", modal_secure: "Sécurisé",
         alert_color: "Veuillez choisir une couleur", alert_size: "Veuillez choisir une taille", alert_rating: "Veuillez attribuer une note avec les étoiles", alert_added: "Ajouté au panier !", alert_order_success: "Commande envoyée avec succès !", alert_review_success: "Merci pour votre avis !",
         colors: "Couleurs:", sizes: "Tailles:", quantity: "Quantité", search_placeholder: "Rechercher...",
-        footer_rights: "Tous droits réservés."
+        footer_rights: "Tous droits réservés.",size_guide_btn: "Guide des tailles",
+        size_guide_title: "Guide des Tailles",
+        size_guide_subtitle: "Mesures standards en centimètres (cm)",
+        th_size: "Taille",
+        th_chest: "Largeur (Poitrine)",
+        th_length: "Longueur",
+        size_guide_tip: "Conseil : Si vous hésitez entre deux tailles pour une coupe décontractée, choisissez la taille supérieure."
     },
     en: {
         out_of_stock: "Out of Stock",
@@ -81,7 +94,13 @@ about_history_text: "In 140 B.C.E., the Phoenicians founded Ikosim in North Afri
         modal_delivery: "48h Delivery", modal_secure: "Secured",
         alert_color: "Please select a color", alert_size: "Please select a size", alert_rating: "Please select a star rating", alert_added: "Added to cart!", alert_order_success: "Order placed successfully!", alert_review_success: "Thank you for your review!",
         colors: "Colors:", sizes: "Sizes:", quantity: "Quantity", search_placeholder: "Search...",
-        footer_rights: "All rights reserved."
+        footer_rights: "All rights reserved.",size_guide_btn: "Size Guide",
+        size_guide_title: "Size Guide",
+        size_guide_subtitle: "Standard measurements in centimeters (cm)",
+        th_size: "Size",
+        th_chest: "Width (Chest)",
+        th_length: "Length",
+        size_guide_tip: "Tip: If you are between two sizes and prefer a relaxed fit, go with the larger size."
     }
 };
 
@@ -477,12 +496,21 @@ function openDetails(p) {
                 + availableColors.map(c => `<span class="color-box" data-val="${c}" style="border:1.5px solid var(--border, #ccc); padding:6px 14px; border-radius:8px; cursor:pointer; font-weight:600;">${c}</span>`).join('')
                 + '</div></div>';
         }
-        if (availableSizes.length > 0) {
-            html += `<div class="modal-opts-group" style="margin-top:12px;"><label style="font-weight:700; display:block; margin-bottom:6px;">${t.sizes}</label><div class="product-sizes" style="display:flex; gap:8px; flex-wrap:wrap;">`
-                + availableSizes.map(s => `<span class="size-box" data-val="${s}" style="border:1.5px solid var(--border, #ccc); padding:6px 14px; border-radius:8px; cursor:pointer; font-weight:600;">${s}</span>`).join('')
-                + '</div></div>';
+      if (availableSizes.length > 0) {
+            html += `
+                <div class="modal-opts-group" style="margin-top:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <label style="font-weight:700; margin:0;">${t.sizes}</label>
+                        <!-- زر دليل المقاسات الصغير والأنيق -->
+                        <button type="button" onclick="openSizeGuide()" class="size-guide-link">
+                            <i class="fas fa-ruler"></i> <span>${t.size_guide_btn || 'Guide des tailles'}</span>
+                        </button>
+                    </div>
+                    <div class="product-sizes" style="display:flex; gap:8px; flex-wrap:wrap;">
+                        ${availableSizes.map(s => `<span class="size-box" data-val="${s}" style="border:1.5px solid var(--border, #ccc); padding:6px 14px; border-radius:8px; cursor:pointer; font-weight:600;">${s}</span>`).join('')}
+                    </div>
+                </div>`;
         }
-
         html += `
             <div class="modal-opts-group" style="margin-top:14px;">
                 <label style="font-weight:700; display:block; margin-bottom:6px;">${t.quantity}</label>
@@ -924,7 +952,15 @@ document.addEventListener('DOMContentLoaded', () => {
             e.target.style.display = 'none';
         }
     });
+window.openSizeGuide = function() {
+    const modal = document.getElementById('size-guide-modal');
+    if (modal) modal.style.display = 'flex';
+};
 
+window.closeSizeGuide = function() {
+    const modal = document.getElementById('size-guide-modal');
+    if (modal) modal.style.display = 'none';
+};
     // القائمة الجانبية في الهاتف
     const nav = document.getElementById('main-nav');
     const overlay = document.getElementById('nav-overlay');
