@@ -1477,3 +1477,62 @@ html[dir="rtl"] .checkout-field select {
     justify-content: center;
     gap: 6px;
 }
+/* --- خيارات الألوان المطورة داخل نافذة المنتج --- */
+.product-colors-v2 {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    margin-top: 6px;
+}
+
+.color-option-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.color-circle-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    outline: 2px solid var(--color-border);
+    outline-offset: 3px;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s ease, outline-color 0.2s ease, box-shadow 0.2s ease;
+    background-size: cover;
+    background-position: center;
+}
+
+.color-option-wrapper:hover .color-circle-btn {
+    transform: scale(1.12);
+    outline-color: var(--color-primary);
+}
+
+.color-option-wrapper.selected .color-circle-btn {
+    outline-color: var(--color-primary);
+    outline-width: 2.5px;
+    transform: scale(1.15);
+    box-shadow: 0 4px 14px rgba(10, 110, 110, 0.35);
+}
+
+.color-name-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    transition: color 0.2s ease;
+    text-align: center;
+    max-width: 60px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.color-option-wrapper.selected .color-name-label {
+    color: var(--color-primary);
+    font-weight: 700;
+}
