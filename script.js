@@ -491,14 +491,18 @@ function openDetails(p) {
         let availableSizes = [];
         if (Array.isArray(parsedSizes)) {
             parsedSizes.forEach(s => {
-                if (s.color && !availableColors.includes(s.color)) availableColors.push(s.color);
-                if (s.size && !availableSizes.includes(s.size)) availableSizes.push(s.size);
+                if (s.color && s.color.trim() && !availableColors.includes(s.color.trim())) {
+                    availableColors.push(s.color.trim());
+                }
+                if (s.size && s.size.trim() && !availableSizes.includes(s.size.trim())) {
+                    availableSizes.push(s.size.trim());
+                }
             });
         }
 
-        // خريطة تحويل الأسماء الشائعة إلى أكواد ألوان
+        // خريطة تحويل الأسماء إلى أكواد الألوان
         const getColorHex = (name) => {
-            if (!name) return '#333333';
+            if (!name) return '#222222';
             const clean = name.trim().toLowerCase();
             const colorMap = {
                 'noir': '#111111', 'black': '#111111', 'أسود': '#111111', 'اسود': '#111111',
@@ -507,19 +511,19 @@ function openDetails(p) {
                 'bleu': '#1e3a8a', 'blue': '#1e3a8a', 'أزرق': '#1e3a8a', 'ازرق': '#1e3a8a',
                 'gris': '#888888', 'grey': '#888888', 'gray': '#888888', 'رمادي': '#888888',
                 'rouge': '#dc2626', 'red': '#dc2626', 'أحمر': '#dc2626', 'احمر': '#dc2626',
-                'beige': '#f5f5dc', 'بيج': '#f5f5dc', 'بني': '#78350f', 'marron': '#78350f', 'brown': '#78350f'
+                'beige': '#f5f5dc', 'بيج': '#f5f5dc', 'marron': '#78350f', 'brown': '#78350f', 'بني': '#78350f'
             };
-            return colorMap[clean] || (clean.startsWith('#') ? clean : '#555555');
+            return colorMap[clean] || (clean.startsWith('#') ? clean : '#444444');
         };
 
         let html = '';
         if (availableColors.length > 0) {
             html += `
                 <div class="modal-opts-group">
-                    <label style="font-weight:700; display:block; margin-bottom:6px;">${t.colors}</label>
+                    <label style="font-weight:700; display:block; margin-bottom:8px;">${t.colors}</label>
                     <div class="product-colors-v2">
                         ${availableColors.map((c, i) => `
-                            <div class="color-option-wrapper" data-val="${c}" data-index="${i}">
+                            <div class="color-option-wrapper ${i === 0 ? 'selected' : ''}" data-val="${c}" data-index="${i}">
                                 <span class="color-circle-btn" style="background-color: ${getColorHex(c)};"></span>
                                 <span class="color-name-label">${c}</span>
                             </div>
@@ -532,34 +536,36 @@ function openDetails(p) {
         if (availableSizes.length > 0) {
             html += `
                 <div class="modal-opts-group" style="margin-top:14px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <label style="font-weight:700; margin:0;">${t.sizes}</label>
                         <button type="button" onclick="openSizeGuide()" class="size-guide-link">
                             <i class="fas fa-ruler"></i> <span>${t.size_guide_btn || 'Guide des tailles'}</span>
                         </button>
                     </div>
                     <div class="product-sizes" style="display:flex; gap:8px; flex-wrap:wrap;">
-                        ${availableSizes.map(s => `<span class="size-box" data-val="${s}" style="border:1.5px solid var(--border, #ccc); padding:6px 14px; border-radius:8px; cursor:pointer; font-weight:600;">${s}</span>`).join('')}
+                        ${availableSizes.map((s, i) => `<span class="size-box ${i === 0 ? 'selected' : ''}" data-val="${s}">${s}</span>`).join('')}
                     </div>
-                </div>`;
+                </div>
+            `;
         }
 
         html += `
             <div class="modal-opts-group" style="margin-top:14px;">
-                <label style="font-weight:700; display:block; margin-bottom:6px;">${t.quantity}</label>
+                <label style="font-weight:700; display:block; margin-bottom:8px;">${t.quantity}</label>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <button type="button" id="qty-minus" style="width:36px; height:36px; border:1px solid var(--border, #ccc); background:var(--bg3, #f5f5f5); border-radius:8px; cursor:pointer; font-weight:bold;">-</button>
-                    <input type="number" id="modal-product-qty" value="1" min="1" max="50" style="width:60px; height:36px; text-align:center; border:1px solid var(--border, #ccc); border-radius:8px; background:var(--input-bg, #fff); color:var(--text, #000); font-weight:bold;">
-                    <button type="button" id="qty-plus" style="width:36px; height:36px; border:1px solid var(--border, #ccc); background:var(--bg3, #f5f5f5); border-radius:8px; cursor:pointer; font-weight:bold;">+</button>
+                    <button type="button" id="qty-minus" style="width:36px; height:36px; border:1px solid var(--color-border); background:var(--color-bg); border-radius:8px; cursor:pointer; font-weight:bold; color:var(--color-text);">-</button>
+                    <input type="number" id="modal-product-qty" value="1" min="1" max="50" style="width:60px; height:36px; text-align:center; border:1px solid var(--color-border); border-radius:8px; background:var(--color-bg-card); color:var(--color-text); font-weight:bold;">
+                    <button type="button" id="qty-plus" style="width:36px; height:36px; border:1px solid var(--color-border); background:var(--color-bg); border-radius:8px; cursor:pointer; font-weight:bold; color:var(--color-text);">+</button>
                 </div>
             </div>
         `;
         opts.innerHTML = html;
 
-        let selColor = availableColors.length > 0 ? null : 'Standard';
-        let selSize = availableSizes.length > 0 ? null : 'Standard';
+        // تعيين القيم الافتراضية
+        let selColor = availableColors.length > 0 ? availableColors[0] : 'Standard';
+        let selSize = availableSizes.length > 0 ? availableSizes[0] : 'Standard';
 
-        // تفعيل اختيار اللون وتبديل صورة التيشيرت المعروضة
+        // تفعيل النقر على دوائر الألوان وتبديل الصورة
         opts.querySelectorAll('.color-option-wrapper').forEach(wrap => {
             wrap.addEventListener('click', () => {
                 opts.querySelectorAll('.color-option-wrapper').forEach(w => w.classList.remove('selected'));
@@ -567,25 +573,23 @@ function openDetails(p) {
                 selColor = wrap.dataset.val;
 
                 const colorIdx = parseInt(wrap.dataset.index, 10);
-                // ربط اللون بالصورة المقابلة له في المعرض إن وُجدت
-                if (gallery && gallery.length > colorIdx) {
+                // تبديل صورة التيشيرت المعروضة إذا كان المعرض يحتوي صورة لهذا اللون
+                if (gallery && gallery[colorIdx]) {
                     updateActiveImage(colorIdx);
                 }
             });
         });
 
-        opts.querySelectorAll('.size-box').forEach(b => b.addEventListener('click', e => {
-            opts.querySelectorAll('.size-box').forEach(x => { 
-                x.style.borderColor = 'var(--border, #ccc)'; 
-                x.style.backgroundColor = 'transparent'; 
-                x.style.color = 'inherit'; 
+        // تفعيل النقر على المقاسات
+        opts.querySelectorAll('.size-box').forEach(b => {
+            b.addEventListener('click', e => {
+                opts.querySelectorAll('.size-box').forEach(x => x.classList.remove('selected'));
+                e.target.classList.add('selected');
+                selSize = e.target.dataset.val;
             });
-            e.target.style.borderColor = 'var(--color-primary, #00c896)'; 
-            e.target.style.backgroundColor = 'var(--color-primary, #00c896)'; 
-            e.target.style.color = '#fff';
-            selSize = e.target.dataset.val;
-        }));
+        });
 
+        // عداد الكمية
         const qtyInput = document.getElementById('modal-product-qty');
         document.getElementById('qty-minus')?.addEventListener('click', () => {
             let val = parseInt(qtyInput.value) || 1;
@@ -596,6 +600,7 @@ function openDetails(p) {
             qtyInput.value = val + 1;
         });
 
+        // زر إضافة للسلة
         const cartBtn = document.getElementById('modal-add-to-cart-btn');
         const newCartBtn = cartBtn.cloneNode(true);
         cartBtn.parentNode.replaceChild(newCartBtn, cartBtn);
@@ -617,7 +622,7 @@ function openDetails(p) {
                     id: `${p.id}-${selColor}-${selSize}`,
                     product_id: p.id,
                     name: p.name,
-                   image_url: p.image_url || 'images/logo3.png', // حفظ صورة المنتج
+                    image_url: mainImg.src || p.image_url || 'images/logo3.png',
                     color: selColor,
                     size: selSize,
                     qty: quantity,
@@ -631,7 +636,6 @@ function openDetails(p) {
 
     modal.style.display = 'block';
 }
-
 // ─── صفحة السلة ───
 function populateWilayas() {
     const wilayaSelect = document.getElementById('checkout-wilaya');
