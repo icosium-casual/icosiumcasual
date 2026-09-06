@@ -478,7 +478,7 @@ function openDetails(p) {
         badgeEl.style.display = 'none';
     }
 
-    // 3. خيارات الألوان والمقاسات والكمية
+   // 3. خيارات الألوان والمقاسات والكمية
     const opts = document.getElementById('modal-product-options');
     if (opts) {
         opts.innerHTML = '';
@@ -496,18 +496,44 @@ function openDetails(p) {
             });
         }
 
+        // خريطة تحويل الأسماء الشائعة إلى أكواد ألوان
+        const getColorHex = (name) => {
+            if (!name) return '#333333';
+            const clean = name.trim().toLowerCase();
+            const colorMap = {
+                'noir': '#111111', 'black': '#111111', 'أسود': '#111111', 'اسود': '#111111',
+                'blanc': '#ffffff', 'white': '#ffffff', 'أبيض': '#ffffff', 'ابيض': '#ffffff',
+                'vert': '#0a6e6e', 'green': '#0a6e6e', 'أخضر': '#0a6e6e', 'اخضر': '#0a6e6e',
+                'bleu': '#1e3a8a', 'blue': '#1e3a8a', 'أزرق': '#1e3a8a', 'ازرق': '#1e3a8a',
+                'gris': '#888888', 'grey': '#888888', 'gray': '#888888', 'رمادي': '#888888',
+                'rouge': '#dc2626', 'red': '#dc2626', 'أحمر': '#dc2626', 'احمر': '#dc2626',
+                'beige': '#f5f5dc', 'بيج': '#f5f5dc', 'بني': '#78350f', 'marron': '#78350f', 'brown': '#78350f'
+            };
+            return colorMap[clean] || (clean.startsWith('#') ? clean : '#555555');
+        };
+
         let html = '';
         if (availableColors.length > 0) {
-            html += `<div class="modal-opts-group"><label style="font-weight:700; display:block; margin-bottom:6px;">${t.colors}</label><div class="product-colors" style="display:flex; gap:8px; flex-wrap:wrap;">`
-                + availableColors.map(c => `<span class="color-box" data-val="${c}" style="border:1.5px solid var(--border, #ccc); padding:6px 14px; border-radius:8px; cursor:pointer; font-weight:600;">${c}</span>`).join('')
-                + '</div></div>';
+            html += `
+                <div class="modal-opts-group">
+                    <label style="font-weight:700; display:block; margin-bottom:6px;">${t.colors}</label>
+                    <div class="product-colors-v2">
+                        ${availableColors.map((c, i) => `
+                            <div class="color-option-wrapper" data-val="${c}" data-index="${i}">
+                                <span class="color-circle-btn" style="background-color: ${getColorHex(c)};"></span>
+                                <span class="color-name-label">${c}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
         }
-      if (availableSizes.length > 0) {
+
+        if (availableSizes.length > 0) {
             html += `
                 <div class="modal-opts-group" style="margin-top:14px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                         <label style="font-weight:700; margin:0;">${t.sizes}</label>
-                        <!-- زر دليل المقاسات الصغير والأنيق -->
                         <button type="button" onclick="openSizeGuide()" class="size-guide-link">
                             <i class="fas fa-ruler"></i> <span>${t.size_guide_btn || 'Guide des tailles'}</span>
                         </button>
@@ -517,6 +543,7 @@ function openDetails(p) {
                     </div>
                 </div>`;
         }
+
         html += `
             <div class="modal-opts-group" style="margin-top:14px;">
                 <label style="font-weight:700; display:block; margin-bottom:6px;">${t.quantity}</label>
@@ -532,15 +559,30 @@ function openDetails(p) {
         let selColor = availableColors.length > 0 ? null : 'Standard';
         let selSize = availableSizes.length > 0 ? null : 'Standard';
 
-        opts.querySelectorAll('.color-box').forEach(b => b.addEventListener('click', e => {
-            opts.querySelectorAll('.color-box').forEach(x => { x.style.borderColor = 'var(--border, #ccc)'; x.style.backgroundColor = 'transparent'; x.style.color = 'inherit'; });
-            e.target.style.borderColor = 'var(--color-primary, #00c896)'; e.target.style.backgroundColor = 'var(--color-primary, #00c896)'; e.target.style.color = '#fff';
-            selColor = e.target.dataset.val;
-        }));
+        // تفعيل اختيار اللون وتبديل صورة التيشيرت المعروضة
+        opts.querySelectorAll('.color-option-wrapper').forEach(wrap => {
+            wrap.addEventListener('click', () => {
+                opts.querySelectorAll('.color-option-wrapper').forEach(w => w.classList.remove('selected'));
+                wrap.classList.add('selected');
+                selColor = wrap.dataset.val;
+
+                const colorIdx = parseInt(wrap.dataset.index, 10);
+                // ربط اللون بالصورة المقابلة له في المعرض إن وُجدت
+                if (gallery && gallery.length > colorIdx) {
+                    updateActiveImage(colorIdx);
+                }
+            });
+        });
 
         opts.querySelectorAll('.size-box').forEach(b => b.addEventListener('click', e => {
-            opts.querySelectorAll('.size-box').forEach(x => { x.style.borderColor = 'var(--border, #ccc)'; x.style.backgroundColor = 'transparent'; x.style.color = 'inherit'; });
-            e.target.style.borderColor = 'var(--color-primary, #00c896)'; e.target.style.backgroundColor = 'var(--color-primary, #00c896)'; e.target.style.color = '#fff';
+            opts.querySelectorAll('.size-box').forEach(x => { 
+                x.style.borderColor = 'var(--border, #ccc)'; 
+                x.style.backgroundColor = 'transparent'; 
+                x.style.color = 'inherit'; 
+            });
+            e.target.style.borderColor = 'var(--color-primary, #00c896)'; 
+            e.target.style.backgroundColor = 'var(--color-primary, #00c896)'; 
+            e.target.style.color = '#fff';
             selSize = e.target.dataset.val;
         }));
 
