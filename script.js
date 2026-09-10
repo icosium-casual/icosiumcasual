@@ -407,7 +407,6 @@ function openDetails(p) {
 
     let currentImgIndex = 0;
 
-    // دالة تبديل الصورة وتحديث المربعات النشطة
     const updateActiveImage = (index) => {
         currentImgIndex = (index + gallery.length) % gallery.length;
         mainImg.src = gallery[currentImgIndex];
@@ -419,7 +418,6 @@ function openDetails(p) {
 
     updateActiveImage(0);
 
-    // تفعيل الأسهم ومربعات الصور عند وجود أكثر من صورة
     if (gallery.length > 1) {
         if (prevBtn) {
             prevBtn.style.display = 'flex';
@@ -436,7 +434,6 @@ function openDetails(p) {
             };
         }
 
-        // رسم مربعات الصور مع حدث النقر المباشر
         gallery.forEach((imgSrc, idx) => {
             const thumb = document.createElement('img');
             thumb.src = imgSrc;
@@ -454,8 +451,6 @@ function openDetails(p) {
         if (nextBtn) nextBtn.style.display = 'none';
         thumbStrip.style.display = 'none';
     }
-
-    // تم حذف مستمعات أحداث الـ Zoom بالماوس (لا مزيد من التكبير المزعج)
 
     // 2. الأسعار والخصومات
     document.getElementById('modal-product-name').textContent = p.name;
@@ -478,7 +473,7 @@ function openDetails(p) {
         badgeEl.style.display = 'none';
     }
 
-   // 3. خيارات الألوان والمقاسات والكمية
+    // 3. خيارات الألوان والمقاسات والكمية مع فحص المخزون لحظياً
     const opts = document.getElementById('modal-product-options');
     if (opts) {
         opts.innerHTML = '';
@@ -486,21 +481,19 @@ function openDetails(p) {
         if (p.sizes) {
             try { parsedSizes = typeof p.sizes === 'string' ? JSON.parse(p.sizes) : p.sizes; } catch(e) {}
         }
+        if (!Array.isArray(parsedSizes)) parsedSizes = [];
 
         let availableColors = [];
         let availableSizes = [];
-        if (Array.isArray(parsedSizes)) {
-            parsedSizes.forEach(s => {
-                if (s.color && s.color.trim() && !availableColors.includes(s.color.trim())) {
-                    availableColors.push(s.color.trim());
-                }
-                if (s.size && s.size.trim() && !availableSizes.includes(s.size.trim())) {
-                    availableSizes.push(s.size.trim());
-                }
-            });
-        }
+        parsedSizes.forEach(s => {
+            if (s.color && s.color.trim() && !availableColors.includes(s.color.trim())) {
+                availableColors.push(s.color.trim());
+            }
+            if (s.size && s.size.trim() && !availableSizes.includes(s.size.trim())) {
+                availableSizes.push(s.size.trim());
+            }
+        });
 
-        // خريطة تحويل الأسماء إلى أكواد الألوان
         const getColorHex = (name) => {
             if (!name) return '#222222';
             const clean = name.trim().toLowerCase();
@@ -558,14 +551,76 @@ function openDetails(p) {
                     <button type="button" id="qty-plus" style="width:36px; height:36px; border:1px solid var(--color-border); background:var(--color-bg); border-radius:8px; cursor:pointer; font-weight:bold; color:var(--color-text);">+</button>
                 </div>
             </div>
+            <!-- مكان تنبيه حالة المخزون للمقاس واللون -->
+            <div id="modal-variant-stock-status" style="margin-top:12px; font-size:0.85rem; font-weight:700; display:none;"></div>
         `;
         opts.innerHTML = html;
 
-        // تعيين القيم الافتراضية
         let selColor = availableColors.length > 0 ? availableColors[0] : 'Standard';
         let selSize = availableSizes.length > 0 ? availableSizes[0] : 'Standard';
 
-        // تفعيل النقر على دوائر الألوان وتبديل الصورة
+        // استبدال زر السلة بنسخة نظيفة لإزالة المستمعات القديمة
+        const cartBtn = document.getElementById('modal-add-to-cart-btn');
+        const newCartBtn = cartBtn.cloneNode(true);
+        cartBtn.parentNode.replaceChild(newCartBtn, cartBtn);
+
+        const statusEl = document.getElementById('modal-variant-stock-status');
+
+        // دالة فحص المخزون المشترك للون والمقاس المحددين
+        const checkVariantStock = () => {
+            if (isComingSoon) {
+                newCartBtn.disabled = true;
+                newCartBtn.style.opacity = '0.5';
+                newCartBtn.style.cursor = 'not-allowed';
+                newCartBtn.textContent = t.btn_soon;
+                if (statusEl) statusEl.style.display = 'none';
+                return;
+            }
+
+            // فحص المخزون العام أولاً
+            if (p.stock <= 0) {
+                newCartBtn.disabled = true;
+                newCartBtn.style.opacity = '0.5';
+                newCartBtn.style.cursor = 'not-allowed';
+                newCartBtn.textContent = t.out_of_stock || 'Rupture de stock';
+                if (statusEl) statusEl.style.display = 'none';
+                return;
+            }
+
+            // فحص المخزون المخصص للمقاس واللون إن وُجدت مصفوفة المتغيرات
+            if (parsedSizes.length > 0) {
+                const match = parsedSizes.find(item => {
+                    const cMatch = !item.color || item.color.trim() === selColor;
+                    const sMatch = !item.size || item.size.trim() === selSize;
+                    return cMatch && sMatch;
+                });
+
+                const availableQty = match ? (parseInt(match.qty, 10) || 0) : 0;
+
+                if (availableQty <= 0) {
+                    newCartBtn.disabled = true;
+                    newCartBtn.style.opacity = '0.5';
+                    newCartBtn.style.cursor = 'not-allowed';
+                    newCartBtn.innerHTML = `<i class="fas fa-ban"></i> ${t.out_of_stock || 'Rupture de stock'}`;
+                    
+                    if (statusEl) {
+                        statusEl.style.display = 'block';
+                        statusEl.style.color = '#ef4444';
+                        statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> Taille <strong>${selSize}</strong> non disponible en <strong>${selColor}</strong>`;
+                    }
+                    return;
+                }
+            }
+
+            // في حال توفر الكمية
+            newCartBtn.disabled = false;
+            newCartBtn.style.opacity = '1';
+            newCartBtn.style.cursor = 'pointer';
+            newCartBtn.innerHTML = `<i class="fas fa-shopping-cart"></i> ${t.btn_add_cart}`;
+            if (statusEl) statusEl.style.display = 'none';
+        };
+
+        // تفعيل النقر على خيارات الألوان
         opts.querySelectorAll('.color-option-wrapper').forEach(wrap => {
             wrap.addEventListener('click', () => {
                 opts.querySelectorAll('.color-option-wrapper').forEach(w => w.classList.remove('selected'));
@@ -573,10 +628,10 @@ function openDetails(p) {
                 selColor = wrap.dataset.val;
 
                 const colorIdx = parseInt(wrap.dataset.index, 10);
-                // تبديل صورة التيشيرت المعروضة إذا كان المعرض يحتوي صورة لهذا اللون
                 if (gallery && gallery[colorIdx]) {
                     updateActiveImage(colorIdx);
                 }
+                checkVariantStock();
             });
         });
 
@@ -586,10 +641,14 @@ function openDetails(p) {
                 opts.querySelectorAll('.size-box').forEach(x => x.classList.remove('selected'));
                 e.target.classList.add('selected');
                 selSize = e.target.dataset.val;
+                checkVariantStock();
             });
         });
 
-        // عداد الكمية
+        // تشغيل الفحص الأولي للقيم الافتراضية
+        checkVariantStock();
+
+        // أزرار زيادة ونقصان الكمية
         const qtyInput = document.getElementById('modal-product-qty');
         document.getElementById('qty-minus')?.addEventListener('click', () => {
             let val = parseInt(qtyInput.value) || 1;
@@ -597,46 +656,29 @@ function openDetails(p) {
         });
         document.getElementById('qty-plus')?.addEventListener('click', () => {
             let val = parseInt(qtyInput.value) || 1;
-            qtyInput.value = val + 1;
+            if (val < 50) qtyInput.value = val + 1;
         });
 
-        // زر إضافة للسلة
-        const cartBtn = document.getElementById('modal-add-to-cart-btn');
-        const newCartBtn = cartBtn.cloneNode(true);
-        cartBtn.parentNode.replaceChild(newCartBtn, cartBtn);
-        const isOutOfStock = p.stock <= 0;
-       
-        if (isComingSoon) {
-            newCartBtn.disabled = true;
-            newCartBtn.style.opacity = '0.5';
-            newCartBtn.textContent = t.btn_soon;
-           } else if (isOutOfStock) {
-    newCartBtn.disabled = true;
-    newCartBtn.style.opacity = '0.5';
-    newCartBtn.textContent = t.out_of_stock; // يظهر "نفاذ الكمية" ولا يمكن الضغط عليه
-        } else {
-            newCartBtn.disabled = false;
-            newCartBtn.style.opacity = '1';
-            newCartBtn.innerHTML = `<i class="fas fa-shopping-cart"></i> ${t.btn_add_cart}`;
-            newCartBtn.addEventListener('click', () => {
-                if (availableColors.length > 0 && !selColor) return alert(t.alert_color);
-                if (availableSizes.length > 0 && !selSize) return alert(t.alert_size);
+        // إضافة الطلب إلى السلة
+        newCartBtn.addEventListener('click', () => {
+            if (newCartBtn.disabled) return;
+            if (availableColors.length > 0 && !selColor) return alert(t.alert_color);
+            if (availableSizes.length > 0 && !selSize) return alert(t.alert_size);
 
-                const quantity = parseInt(qtyInput?.value, 10) || 1;
-                addToCart({
-                    id: `${p.id}-${selColor}-${selSize}`,
-                    product_id: p.id,
-                    name: p.name,
-                    image_url: mainImg.src || p.image_url || 'images/logo3.png',
-                    color: selColor,
-                    size: selSize,
-                    qty: quantity,
-                    unit_price: parseFloat(p.price),
-                    price: parseFloat(p.price) * quantity
-                });
-                modal.style.display = 'none';
+            const quantity = parseInt(qtyInput?.value, 10) || 1;
+            addToCart({
+                id: `${p.id}-${selColor}-${selSize}`,
+                product_id: p.id,
+                name: p.name,
+                image_url: mainImg.src || p.image_url || 'images/logo3.png',
+                color: selColor,
+                size: selSize,
+                qty: quantity,
+                unit_price: parseFloat(p.price),
+                price: parseFloat(p.price) * quantity
             });
-        }
+            modal.style.display = 'none';
+        });
     }
 
     modal.style.display = 'block';
