@@ -2468,88 +2468,7 @@ document.addEventListener('click', e => {
     panel.classList.remove('open');
   }
 });
-async function confirmOrder(orderId) {
-    try {
-        // 1. جلب بيانات الطلب لمعرفة المنتجات والكميات المطلوبة
-        const { data: order, error: orderFetchError } = await supabaseClient
-            .from('orders')
-            .select('*')
-            .eq('id', orderId)
-            .single();
 
-        if (orderFetchError || !order) {
-            alert("تعذر العثور على بيانات الطلب.");
-            return;
-        }
-
-        // إذا كان الطلب مؤكداً مسبقاً، نمنع تكرار خصم المخزون
-        if (order.status === 'Confirmed') {
-            alert("هذا الطلب تم تأكيده مسبقاً وتم خصم كمياته من المخزون.");
-            return;
-        }
-
-        const items = order.items || [];
-        if (!Array.isArray(items) || items.length === 0) {
-            alert("لا توجد منتجات داخل هذا الطلب.");
-            return;
-        }
-
-        // 2. تكرار على كل عنصر في الطلبية لخصم كميته من المخزون
-        for (const item of items) {
-            const productId = item.product_id;
-            const purchasedQty = parseInt(item.qty, 10) || 1;
-
-            if (!productId) continue;
-
-            // أ) جلب المخزون الحالي للمنتج
-            const { data: product, error: prodFetchError } = await supabaseClient
-                .from('products')
-                .select('stock, name')
-                .eq('id', productId)
-                .single();
-
-            if (prodFetchError || !product) {
-                console.error(`تعذر جلب المنتج رقم: ${productId}`, prodFetchError);
-                continue;
-            }
-
-            // ب) حساب المخزون الجديد بعد الخصم (بحيث لا يقل عن الصفر)
-            const currentStock = parseInt(product.stock, 10) || 0;
-            const newStock = Math.max(0, currentStock - purchasedQty);
-
-            // ج) تحديث المخزون في جدول المنتجات
-            const { error: stockUpdateError } = await supabaseClient
-                .from('products')
-                .update({ stock: newStock })
-                .eq('id', productId);
-
-            if (stockUpdateError) {
-                console.error(`خطأ في تحديث مخزون المنتج: ${product.name}`, stockUpdateError);
-            }
-        }
-
-        // 3. تحديث حالة الطلبية إلى "Confirmed"
-        const { error: statusUpdateError } = await supabaseClient
-            .from('orders')
-            .update({ status: 'Confirmed' })
-            .eq('id', orderId);
-
-        if (statusUpdateError) {
-            alert("حدث خطأ أثناء تعديل حالة الطلبية.");
-            return;
-        }
-
-        alert("تم تأكيد الطلبية بنجاح وتم خصم الكميات من المخزون!");
-        
-        // إعادة تحميل جدول الطلبات والمنتجات في لوحة التحكم
-        if (typeof loadOrders === 'function') loadOrders();
-        if (typeof loadAdminProducts === 'function') loadAdminProducts();
-
-    } catch (err) {
-        console.error("Erreur lors de la confirmation :", err);
-        alert("حدث خطأ غير متوقع أثناء المعالجة.");
-    }
-}
 function renderNotifPanel() {
   const el = document.getElementById('notif-panel-body');
   if (!el) return;
@@ -3359,12 +3278,16 @@ function renderOrders(orders) {
 }
 
 function filterOrders(status, btnElement) {
-    // إزالة التحديد من جميع أزرار الفلترة
-    document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+    currentOrderFilter = status;
+
+    // إزالة التحديد وتفعيله على الزر المختار
+    document.querySelectorAll('#orders-filters .filter-pill').forEach(btn => {
+        btn.classList.remove('on');
+        btn.classList.remove('active');
+    });
     
-    // تفعيل الزر المختار
     if (btnElement) {
-        btnElement.classList.add('active');
+        btnElement.classList.add('on');
     }
 
     // تصفية وعرض الطلبيات
@@ -3372,7 +3295,7 @@ function filterOrders(status, btnElement) {
         ? allOrders 
         : allOrders.filter(o => o.status === status);
 
-    renderOrdersTable(filtered);
+    renderOrders(filtered); // تم تعديل الاسم من renderOrdersTable إلى renderOrders
 }
 
 function searchOrders(q) {
@@ -3447,20 +3370,91 @@ function openOrderModal(o) {
 }
 
 async function saveOrder() {
-  const { error } = await dbFrom('orders').update({
-    status: document.getElementById('mod-status-sel').value,
-    livreur_id: document.getElementById('mod-livreur-sel').value || null,
-    note_admin: document.getElementById('mod-note').value || null,
-  }).eq('id', currentOrderId);
+  const newStatus = document.getElementById('mod-status-sel').value;
+  const livreurId = document.getElementById('mod-livreur-sel').value || null;
+  const noteAdmin = document.getElementById('mod-note').value || null;
 
-  if (!error) {
-    toast('Commande mise à jour !');
-    logAudit('order', `Commande #${currentOrderId} mise à jour → ${document.getElementById('mod-status-sel').value}`, 'order');
-    addNotification('Commande mise à jour', `#${currentOrderId} → ${document.getElementById('mod-status-sel').value}`);
-    closeModal('modal-order'); 
-    await loadAll();
-  } else {
-    toast('Erreur lors de la mise à jour.', 'err');
+  try {
+    // 1. جلب الطلب الحالي للتحقق من حالته السابقة ومنتجاته
+    const { data: order, error: fetchErr } = await dbFrom('orders').select('*').eq('id', currentOrderId).single();
+    if (fetchErr || !order) {
+      toast('Erreur lors de la récupération de la commande.', 'err');
+      return;
+    }
+
+    // 2. إذا تم تغيير الحالة إلى Confirmed ولم تكن مسبقاً Confirmed، نقوم بخصم المخزون
+    if (newStatus === 'Confirmed' && order.status !== 'Confirmed') {
+      let items = order.items;
+      if (typeof items === 'string') {
+        try { items = JSON.parse(items); } catch(e) { items = []; }
+      }
+
+      if (Array.isArray(items) && items.length > 0) {
+        for (const item of items) {
+          const pId = item.product_id;
+          const qtyToDeduct = parseInt(item.qty, 10) || 1;
+          if (!pId) continue;
+
+          // جلب بيانات المنتج الحالية من قاعدة البيانات
+          const { data: prod } = await dbFrom('products').select('*').eq('id', pId).single();
+          if (prod) {
+            // أ) خصم المخزون الكلي
+            const updatedStock = Math.max(0, (parseInt(prod.stock, 10) || 0) - qtyToDeduct);
+
+            // ب) خصم الكمية من المقاس واللون المحددين داخل مصفوفة sizes
+            let sizesArr = prod.sizes;
+            if (typeof sizesArr === 'string') {
+              try { sizesArr = JSON.parse(sizesArr); } catch(e) { sizesArr = []; }
+            }
+
+            if (Array.isArray(sizesArr) && sizesArr.length > 0) {
+              sizesArr = sizesArr.map(s => {
+                const sameSize = !item.size || s.size === item.size;
+                const sameColor = !item.color || s.color === item.color;
+                if (sameSize && sameColor) {
+                  return { ...s, qty: Math.max(0, (parseInt(s.qty, 10) || 0) - qtyToDeduct) };
+                }
+                return s;
+              });
+            }
+
+            // ج) حفظ التحديث في جدول المنتجات
+            await dbFrom('products').update({
+              stock: updatedStock,
+              sizes: sizesArr
+            }).eq('id', pId);
+
+            // د) تسجيل حركة خروج في جدول mouvements de stock
+            await dbFrom('stock_movements').insert([{
+              product_id: pId,
+              type: 'OUT',
+              quantity: qtyToDeduct,
+              reason: `Commande confirmée #${currentOrderId}`
+            }]);
+          }
+        }
+      }
+    }
+
+    // 3. تحديث بيانات الطلب
+    const { error: updateErr } = await dbFrom('orders').update({
+      status: newStatus,
+      livreur_id: livreurId,
+      note_admin: noteAdmin,
+    }).eq('id', currentOrderId);
+
+    if (!updateErr) {
+      toast(newStatus === 'Confirmed' ? 'Commande confirmée et stock déduit avec succès !' : 'Commande mise à jour !');
+      logAudit('order', `Commande #${currentOrderId} mise à jour → ${newStatus}`, 'order');
+      addNotification('Commande mise à jour', `#${currentOrderId} → ${newStatus}`);
+      closeModal('modal-order'); 
+      await loadAll();
+    } else {
+      toast('Erreur lors de la mise à jour.', 'err');
+    }
+  } catch (err) {
+    console.error("Erreur saveOrder:", err);
+    toast("Une erreur est survenue lors de l'enregistrement.", 'err');
   }
 }
 
