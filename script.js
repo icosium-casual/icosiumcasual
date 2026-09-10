@@ -604,11 +604,16 @@ function openDetails(p) {
         const cartBtn = document.getElementById('modal-add-to-cart-btn');
         const newCartBtn = cartBtn.cloneNode(true);
         cartBtn.parentNode.replaceChild(newCartBtn, cartBtn);
-
+        const isOutOfStock = p.stock <= 0;
+       
         if (isComingSoon) {
             newCartBtn.disabled = true;
             newCartBtn.style.opacity = '0.5';
             newCartBtn.textContent = t.btn_soon;
+           } else if (isOutOfStock) {
+    newCartBtn.disabled = true;
+    newCartBtn.style.opacity = '0.5';
+    newCartBtn.textContent = t.out_of_stock; // يظهر "نفاذ الكمية" ولا يمكن الضغط عليه
         } else {
             newCartBtn.disabled = false;
             newCartBtn.style.opacity = '1';
