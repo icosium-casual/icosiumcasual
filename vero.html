@@ -1517,8 +1517,7 @@ a { text-decoration: none; }
           <div class="filters" id="orders-filters">
             <button class="filter-pill on" onclick="filterOrders('all',this)">Toutes <span class="filter-count" id="fc-all">0</span></button>
             <button class="filter-pill" onclick="filterOrders('Pending',this)">En attente <span class="filter-count" id="fc-pending">0</span></button>
-            <button class="filter-pill" onclick="filterOrders('Confirmed',this)">Confirmées <span class="filter-count" id="fc-confirmed">0</span></button>
-            <button class="filter-pill" onclick="filterOrders('Shipped',this)">En livraison <span class="filter-count" id="fc-shipped">0</span></button>
+            <button class="filter-pill" onclick="filterOrders('Confirmed', this)">Confirmées <span class="filter-count" id="fc-confirmed">0</span></button>            <button class="filter-pill" onclick="filterOrders('Shipped',this)">En livraison <span class="filter-count" id="fc-shipped">0</span></button>
             <button class="filter-pill" onclick="filterOrders('Delivered',this)">Livrées <span class="filter-count" id="fc-delivered">0</span></button>
             <button class="filter-pill" onclick="filterOrders('Cancelled',this)">Annulées <span class="filter-count" id="fc-cancelled">0</span></button>
           </div>
@@ -2469,7 +2468,88 @@ document.addEventListener('click', e => {
     panel.classList.remove('open');
   }
 });
+async function confirmOrder(orderId) {
+    try {
+        // 1. جلب بيانات الطلب لمعرفة المنتجات والكميات المطلوبة
+        const { data: order, error: orderFetchError } = await supabaseClient
+            .from('orders')
+            .select('*')
+            .eq('id', orderId)
+            .single();
 
+        if (orderFetchError || !order) {
+            alert("تعذر العثور على بيانات الطلب.");
+            return;
+        }
+
+        // إذا كان الطلب مؤكداً مسبقاً، نمنع تكرار خصم المخزون
+        if (order.status === 'Confirmed') {
+            alert("هذا الطلب تم تأكيده مسبقاً وتم خصم كمياته من المخزون.");
+            return;
+        }
+
+        const items = order.items || [];
+        if (!Array.isArray(items) || items.length === 0) {
+            alert("لا توجد منتجات داخل هذا الطلب.");
+            return;
+        }
+
+        // 2. تكرار على كل عنصر في الطلبية لخصم كميته من المخزون
+        for (const item of items) {
+            const productId = item.product_id;
+            const purchasedQty = parseInt(item.qty, 10) || 1;
+
+            if (!productId) continue;
+
+            // أ) جلب المخزون الحالي للمنتج
+            const { data: product, error: prodFetchError } = await supabaseClient
+                .from('products')
+                .select('stock, name')
+                .eq('id', productId)
+                .single();
+
+            if (prodFetchError || !product) {
+                console.error(`تعذر جلب المنتج رقم: ${productId}`, prodFetchError);
+                continue;
+            }
+
+            // ب) حساب المخزون الجديد بعد الخصم (بحيث لا يقل عن الصفر)
+            const currentStock = parseInt(product.stock, 10) || 0;
+            const newStock = Math.max(0, currentStock - purchasedQty);
+
+            // ج) تحديث المخزون في جدول المنتجات
+            const { error: stockUpdateError } = await supabaseClient
+                .from('products')
+                .update({ stock: newStock })
+                .eq('id', productId);
+
+            if (stockUpdateError) {
+                console.error(`خطأ في تحديث مخزون المنتج: ${product.name}`, stockUpdateError);
+            }
+        }
+
+        // 3. تحديث حالة الطلبية إلى "Confirmed"
+        const { error: statusUpdateError } = await supabaseClient
+            .from('orders')
+            .update({ status: 'Confirmed' })
+            .eq('id', orderId);
+
+        if (statusUpdateError) {
+            alert("حدث خطأ أثناء تعديل حالة الطلبية.");
+            return;
+        }
+
+        alert("تم تأكيد الطلبية بنجاح وتم خصم الكميات من المخزون!");
+        
+        // إعادة تحميل جدول الطلبات والمنتجات في لوحة التحكم
+        if (typeof loadOrders === 'function') loadOrders();
+        if (typeof loadAdminProducts === 'function') loadAdminProducts();
+
+    } catch (err) {
+        console.error("Erreur lors de la confirmation :", err);
+        alert("حدث خطأ غير متوقع أثناء المعالجة.");
+    }
+}
 function renderNotifPanel() {
   const el = document.getElementById('notif-panel-body');
   if (!el) return;
@@ -3278,12 +3358,21 @@ function renderOrders(orders) {
   </tr>`).join('');
 }
 
-function filterOrders(f, btn) {
-  currentOrderFilter = f;
-  document.querySelectorAll('#orders-filters .filter-pill').forEach(b => b.classList.remove('on'));
-  if (btn) btn.classList.add('on');
-  const filtered = f === 'all' ? allOrders : allOrders.filter(o => o.status === f);
-  renderOrders(filtered);
+function filterOrders(status, btnElement) {
+    // إزالة التحديد من جميع أزرار الفلترة
+    document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+    
+    // تفعيل الزر المختار
+    if (btnElement) {
+        btnElement.classList.add('active');
+    }
+
+    // تصفية وعرض الطلبيات
+    const filtered = (status === 'all') 
+        ? allOrders 
+        : allOrders.filter(o => o.status === status);
+
+    renderOrdersTable(filtered);
 }
 
 function searchOrders(q) {
