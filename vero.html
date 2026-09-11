@@ -2323,8 +2323,7 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const db = createClient(SB_URL, SB_KEY);
 const dbFrom = (table) => db.from(table);
 function getDb() { return db; }
-const { count } = await db.from('page_views').select('*', { count: 'exact', head: true });
-console.log("عدد الزيارات:", count);
+
 /* ─── STATE ─── */
 let allOrders = [], allProducts = [], allLivreurs = [], allCategories = [], allWilayas = [], allReviews = [], allStock = [], allCoupons = [], allUsers = [], allNotifications = [];
 let salesChartInst = null, statusChartInst = null, rptSalesChart = null, rptWilayaChart = null, rptProductsChart = null;
@@ -4609,7 +4608,8 @@ function renderGallery() {
       datePicker.classList.add('hidden');
     }
   });
-
+const { count } = await db.from('page_views').select('*', { count: 'exact', head: true });
+console.log("عدد الزيارات:", count);
  
 </script>
 </body>
