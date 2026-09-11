@@ -1438,7 +1438,21 @@ a { text-decoration: none; }
           <h2 id="dash-greeting">Bonjour 👋</h2>
           <p id="dash-date"></p>
         </div>
-        
+        <!-- بطاقة عدد زوار المتجر بالتفصيل -->
+<div class="stat-card" style="--c:#38bdf8">
+  <div class="stat-row1">
+    <span class="stat-label">Visiteurs Boutique</span>
+    <div class="stat-ico" style="background:rgba(56,189,248,.15);color:#38bdf8">
+      <i class="fas fa-eye"></i>
+    </div>
+  </div>
+  <div class="stat-value" id="kpi-visitors-today" style="color:#38bdf8">0</div>
+  <div class="stat-foot b" style="display:flex; flex-direction:column; align-items:flex-start; gap:2px; font-size:0.75rem;">
+    <span><i class="fas fa-calendar-day"></i> Aujourd'hui : <strong id="kpi-vis-today-sub">0</strong></span>
+    <span><i class="fas fa-calendar-week"></i> Cette semaine : <strong id="kpi-vis-week">0</strong></span>
+    <span><i class="fas fa-calendar-alt"></i> Ce mois : <strong id="kpi-vis-month">0</strong></span>
+  </div>
+</div>
         <div class="stats-grid">
           <div class="stat-card" style="--c:#8b5cf6">
             <div class="stat-row1"><span class="stat-label">Ventes Totales</span><div class="stat-ico" style="background:rgba(139,92,246,.15);color:#a78bfa"><i class="fas fa-wallet"></i></div></div>
@@ -2841,7 +2855,7 @@ function calculateUnitEconomics() {
 /* ─── LOAD ALL ─── */
 async function loadAll() {
   try {
-    const [oR, pR, lR, catR, wR, revR, stR, cupR] = await Promise.all([
+  const [oR, pR, lR, catR, wR, revR, stR, cupR, vR] = await Promise.all([
       dbFrom('orders').select('*').order('created_at', { ascending: false }),
       dbFrom('products').select('*').eq('is_deleted', false),
       dbFrom('livreurs').select('*'),
@@ -2850,6 +2864,7 @@ async function loadAll() {
       dbFrom('reviews').select('*').order('created_at', { ascending: false }),
       dbFrom('stock_movements').select('*').order('created_at', { ascending: false }),
       dbFrom('coupons').select('*').order('id', { ascending: false }),
+      dbFrom('page_views').select('*') // جلب سجل الزوار
     ]);
 
     allOrders     = oR.data || [];
@@ -2972,6 +2987,43 @@ async function loadAll() {
     renderActivityFeed();
     refreshDbStats();
     checkAutoNotifications();
+
+     // ─── حساب زوار الموقع (اليوم، الأسبوع، الشهر) ───
+    const allViews = vR.data || [];
+    const now = new Date();
+
+    // بداية اليوم (00:00:00)
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // بداية الأسبوع الحالي (من يوم الإثنين أو الأحد)
+    const dayOfWeek = now.getDay();
+    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // بداية الشهر الحالي
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    let countToday = 0;
+    let countWeek = 0;
+    let countMonth = 0;
+
+    allViews.forEach(v => {
+      const vDate = new Date(v.created_at);
+      if (vDate >= startOfToday) countToday++;
+      if (vDate >= startOfWeek) countWeek++;
+      if (vDate >= startOfMonth) countMonth++;
+    });
+
+    // تحديث قيم عناصر الواجهة
+    const elVisMain = document.getElementById('kpi-visitors-today');
+    const elVisSub = document.getElementById('kpi-vis-today-sub');
+    const elVisWeek = document.getElementById('kpi-vis-week');
+    const elVisMonth = document.getElementById('kpi-vis-month');
+
+    if (elVisMain) elVisMain.textContent = countToday;
+    if (elVisSub) elVisSub.textContent = countToday;
+    if (elVisWeek) elVisWeek.textContent = countWeek;
+    if (elVisMonth) elVisMonth.textContent = countMonth;
   } catch (err) {
     console.error("LoadAll Error:", err);
   }
