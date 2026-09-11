@@ -1066,15 +1066,18 @@ window.openSizeGuide = function() {
     const modal = document.getElementById('size-guide-modal');
     if (modal) modal.style.display = 'flex';
 };
-// تسجيل الزيارة في Supabase
-async function trackVisit() {
-  // منع احتساب الزيارة المكررة في نفس الجلسة إذا أردت
-  if (!sessionStorage.getItem('visited')) {
-    await db.from('page_views').insert([{ page: window.location.pathname }]);
-    sessionStorage.setItem('visited', 'true');
+// تسجيل الزائر في Supabase
+async function registerVisit() {
+  if (!sessionStorage.getItem('icosium_visited')) {
+    try {
+      await db.from('page_views').insert([{ page: window.location.pathname }]);
+      sessionStorage.setItem('icosium_visited', '1');
+    } catch (e) {
+      console.error(e);
+    }
   }
 }
-trackVisit();
+registerVisit();
 window.closeSizeGuide = function() {
     const modal = document.getElementById('size-guide-modal');
     if (modal) modal.style.display = 'none';
