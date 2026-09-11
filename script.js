@@ -1066,18 +1066,33 @@ window.openSizeGuide = function() {
     const modal = document.getElementById('size-guide-modal');
     if (modal) modal.style.display = 'flex';
 };
-// تسجيل الزائر في Supabase
+// كود تسجيل الزيارة الشامل مع فحص الأخطاء
 async function registerVisit() {
-  if (!sessionStorage.getItem('icosium_visited')) {
-    try {
-      await db.from('page_views').insert([{ page: window.location.pathname }]);
-      sessionStorage.setItem('icosium_visited', '1');
-    } catch (e) {
-      console.error(e);
+  try {
+    // التأكد من اسم العميل (db أو supabase)
+    const client = (typeof db !== 'undefined') ? db : ((typeof supabaseClient !== 'undefined') ? supabaseClient : ((typeof supabase !== 'undefined') ? supabase : null));
+
+    if (!client) {
+      console.warn("⚠️ لم يتم العثور على عميل Supabase في هذه الصفحة. تأكد من تحميل مكتبة Supabase.");
+      return;
     }
+
+    const { data, error } = await client.from('page_views').insert([
+      { page: window.location.pathname }
+    ]);
+
+    if (error) {
+      console.error("❌ خطأ Supabase في تسجيل الزيارة:", error.message);
+    } else {
+      console.log("✅ تم تسجيل الزيارة بنجاح في قاعدة البيانات!");
+    }
+  } catch (err) {
+    console.error("❌ خطأ غير متوقع:", err);
   }
 }
-registerVisit();
+
+// تنفيذ الدالة عند تحميل الصفحة
+window.addEventListener('DOMContentLoaded', registerVisit);
 window.closeSizeGuide = function() {
     const modal = document.getElementById('size-guide-modal');
     if (modal) modal.style.display = 'none';
