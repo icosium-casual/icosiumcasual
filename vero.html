@@ -3245,9 +3245,8 @@ function printSection(section) {
 function printChart(canvasId) { window.print(); }
 function printOrderDetail() { window.print(); }
 
-/* ─── EXCEL EXPORT (ZIMOU / ZR FORMAT) ─── */
+/* ─── EXCEL EXPORT (ZIMOU EXPRESS ACCREDITED) ─── */
 function exportOrdersExcel() {
-  // 1. تصفية الطلبيات وفق الفلتر المحدد حالياً في الواجهة
   let targetOrders = (currentOrderFilter === 'all') 
     ? allOrders 
     : allOrders.filter(o => o.status === currentOrderFilter);
@@ -3257,57 +3256,31 @@ function exportOrdersExcel() {
     return;
   }
 
-  // خريطة أسماء الولايات
-  const wilayaMap = Object.fromEntries(allWilayas.map(w => [w.id, w.name]));
-
-  // 2. تجهيز البيانات بمطابقة أعمدة ملف ecommerce-importation.xlsx
   const rows = targetOrders.map(o => {
-    // فصل الاسم واللقب
-    const fullName = (o.customer_name || '').trim();
-    const nameParts = fullName.split(' ');
-    const firstName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : fullName;
-    const lastName = nameParts[0] || fullName;
-
-    // استخراج البلدية والعنوان
-    const rawAddr = o.customer_address || '';
-    let commune = '';
-    let address = rawAddr;
-    if (rawAddr.includes('-')) {
-      const parts = rawAddr.split('-');
-      commune = parts[0].trim();
-      address = parts.slice(1).join('-').trim() || commune;
-    } else {
-      commune = rawAddr;
-    }
-
-    // اسم الولاية
-    const wilayaName = wilayaMap[o.wilaya_id] || (o.wilaya_id ? String(o.wilaya_id) : '');
-
-    // وصف وتلخيص المنتجات والمقاسات
-    let productSummary = 'ICOSIUM CASUAL';
+    let itemsSummary = 'ICOSIUM CASUAL';
     let items = o.items;
     if (typeof items === 'string') {
       try { items = JSON.parse(items); } catch(e) { items = []; }
     }
     if (Array.isArray(items) && items.length > 0) {
-      productSummary = items.map(i => `${i.qty || 1}x ${i.name} (${i.size || 'M'})`).join(' + ');
+      itemsSummary = items.map(i => `${i.qty || 1}x ${i.name} (${i.size || 'M'})`).join(' + ');
     }
 
     return {
-      'Nom*': lastName,
-      'Prénom*': firstName,
+      'Nom*': o.last_name || (o.customer_name ? o.customer_name.split(' ')[0] : ''),
+      'Prénom*': o.first_name || (o.customer_name ? o.customer_name.split(' ').slice(1).join(' ') : ''),
       'Téléphone*': o.customer_phone || '',
-      'Adresse*': address,
-      'Commune*': commune,
-      'Wilaya*': wilayaName,
+      'Adresse*': o.customer_address || '',
+      'Commune*': o.commune || '',
+      'Wilaya*': o.wilaya_id || '',
       'Nº commande*': String(o.id),
-      'Produit*': productSummary,
+      'Produit*': itemsSummary,
       'Poids*': 1,
-      'Type de livraison': 'domicile',
+      'Type de livraison': o.delivery_type === 'stopdesk' ? 'stopdesk' : 'domicile',
       'Prix*': parseFloat(o.total_price || 0),
       'Livraison gratuite': 'Non',
       'Ouvrable': 'Oui',
-      'ID Bureaux ': '',
+      'ID Bureaux ': o.office_id || '',
       'Assuré le colis': 'Non',
       'Valeur declarée': '',
       'Username boutique': 'ICOSIUM CASUAL',
@@ -3318,28 +3291,16 @@ function exportOrdersExcel() {
     };
   });
 
-  // 3. إنشاء مصنف Excel وتنزيله مباشرة
   const worksheet = XLSX.utils.json_to_sheet(rows);
-
-  // تنسيق عرض الأعمدة تلقائياً لسهولة القراءة
-  worksheet['!cols'] = [
-    { wch: 14 }, { wch: 14 }, { wch: 15 }, { wch: 25 },
-    { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 30 },
-    { wch: 8 },  { wch: 16 }, { wch: 10 }, { wch: 16 },
-    { wch: 10 }, { wch: 12 }, { wch: 14 }, { wch: 14 },
-    { wch: 18 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 10 }
-  ];
-
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
 
-  const fileName = `commandes_${currentOrderFilter}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  const fileName = `zimou_commandes_${currentOrderFilter}_${new Date().toISOString().slice(0, 10)}.xlsx`;
   XLSX.writeFile(workbook, fileName);
 
-  logAudit('system', `Export Excel des commandes (${currentOrderFilter})`, 'system');
-  toast(`Export réussi: ${targetOrders.length} commande(s) exportée(s) !`, 'ok');
+  logAudit('system', `Export Excel Zimou (${currentOrderFilter})`, 'system');
+  toast(`Export Zimou réussi : ${targetOrders.length} commande(s) !`, 'ok');
 }
-
 function exportReportCSV() {
   const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
   const headers = ['Mois', 'Commandes', 'Livrées', 'Annulées', 'Revenu (DA)', 'Panier Moyen (DA)'];
