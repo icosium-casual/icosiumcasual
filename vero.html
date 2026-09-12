@@ -1541,14 +1541,38 @@ a { text-decoration: none; }
             <button class="print-btn" onclick="printSection('orders')"><i class="fas fa-print"></i> Imprimer</button>
 <button class="btn btn-ghost btn-sm" onclick="exportOrdersExcel()"><i class="fas fa-file-excel" style="color:#10b981"></i> Export Excel</button>          </div>
         </div>
-        <div class="card" id="orders-print-area">
-          <div class="tbl-wrap">
-            <table class="pro-table">
-              <thead><tr><th>#</th><th>Client</th><th>Téléphone</th><th>Total</th><th>Livraison</th><th>Statut</th><th>Livreur</th><th>Date</th><th></th></tr></thead>
-              <tbody id="orders-body"></tbody>
-            </table>
-          </div>
-        </div>
+      <div class="card" id="orders-print-area">
+  <div class="tbl-wrap">
+    <table class="pro-table">
+      <thead>
+        <tr>
+          <th>Nº commande*</th>
+          <th>Nom*</th>
+          <th>Prénom*</th>
+          <th>Téléphone*</th>
+          <th>Wilaya*</th>
+          <th>Commune*</th>
+          <th>Adresse*</th>
+          <th>Produit*</th>
+          <th>Poids*</th>
+          <th>Type livraison</th>
+          <th>Prix*</th>
+          <th>Livraison gratuite</th>
+          <th>Ouvrable</th>
+          <th>ID Bureaux</th>
+          <th>Assuré</th>
+          <th>Valeur déclarée</th>
+          <th>Boutique</th>
+          <th>Tag Suivi</th>
+          <th>Dimensions (L×W×H)</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="orders-body"></tbody>
+    </table>
+  </div>
+</div>
       </div>
 
       <!-- ════ PRODUCTS ════ -->
@@ -3245,18 +3269,42 @@ function printSection(section) {
 function printChart(canvasId) { window.print(); }
 function printOrderDetail() { window.print(); }
 
-/* ─── EXCEL EXPORT (ZIMOU EXPRESS ACCREDITED) ─── */
 function exportOrdersExcel() {
   let targetOrders = (currentOrderFilter === 'all') 
     ? allOrders 
     : allOrders.filter(o => o.status === currentOrderFilter);
 
   if (!targetOrders.length) {
-    toast(`Aucune commande avec le filtre "${currentOrderFilter}" !`, 'err');
+    toast(`Aucune commande trouvée avec le statut "${currentOrderFilter}" !`, 'err');
     return;
   }
 
+  const wilayaMap = (typeof ZIMOU_DATA !== 'undefined')
+    ? Object.fromEntries(Object.entries(ZIMOU_DATA).map(([name, obj]) => [obj.id, name]))
+    : Object.fromEntries(allWilayas.map(w => [w.id, w.name]));
+
   const rows = targetOrders.map(o => {
+    let lastName = o.last_name || '';
+    let firstName = o.first_name || '';
+    if (!lastName && o.customer_name) {
+      const parts = o.customer_name.trim().split(' ');
+      lastName = parts[0] || '';
+      firstName = parts.slice(1).join(' ') || '';
+    }
+
+    let wilayaName = wilayaMap[o.wilaya_id] || o.wilaya_id || '';
+    let commune = o.commune || '';
+    let address = o.customer_address || '';
+
+    if (!commune && address.includes(' - ')) {
+      const addrParts = address.split(' - ');
+      if (addrParts.length >= 3) {
+        wilayaName = wilayaName || addrParts[0].trim();
+        commune = addrParts[1].trim();
+        address = addrParts.slice(2).join(' - ').trim();
+      }
+    }
+
     let itemsSummary = 'ICOSIUM CASUAL';
     let items = o.items;
     if (typeof items === 'string') {
@@ -3267,27 +3315,27 @@ function exportOrdersExcel() {
     }
 
     return {
-      'Nom*': o.last_name || (o.customer_name ? o.customer_name.split(' ')[0] : ''),
-      'Prénom*': o.first_name || (o.customer_name ? o.customer_name.split(' ').slice(1).join(' ') : ''),
+      'Nom*': lastName,
+      'Prénom*': firstName,
       'Téléphone*': o.customer_phone || '',
-      'Adresse*': o.customer_address || '',
-      'Commune*': o.commune || '',
-      'Wilaya*': o.wilaya_id || '',
+      'Adresse*': address,
+      'Commune*': commune,
+      'Wilaya*': wilayaName,
       'Nº commande*': String(o.id),
       'Produit*': itemsSummary,
-      'Poids*': 1,
+      'Poids*': o.weight || 1,
       'Type de livraison': o.delivery_type === 'stopdesk' ? 'stopdesk' : 'domicile',
       'Prix*': parseFloat(o.total_price || 0),
-      'Livraison gratuite': 'Non',
-      'Ouvrable': 'Oui',
+      'Livraison gratuite': o.free_shipping ? 'Oui' : 'Non',
+      'Ouvrable': o.is_openable !== false ? 'Oui' : 'Non',
       'ID Bureaux ': o.office_id || '',
-      'Assuré le colis': 'Non',
-      'Valeur declarée': '',
+      'Assuré le colis': o.is_insured ? 'Oui' : 'Non',
+      'Valeur declarée': o.declared_value || '',
       'Username boutique': 'ICOSIUM CASUAL',
-      'Tag Suivi': '',
-      'Longeur': '',
-      'Largeur': '',
-      'Hauteur': ''
+      'Tag Suivi': o.tracking_number || '',
+      'Longeur': o.length || '',
+      'Largeur': o.width || '',
+      'Hauteur': o.height || ''
     };
   });
 
@@ -3299,7 +3347,7 @@ function exportOrdersExcel() {
   XLSX.writeFile(workbook, fileName);
 
   logAudit('system', `Export Excel Zimou (${currentOrderFilter})`, 'system');
-  toast(`Export Zimou réussi : ${targetOrders.length} commande(s) !`, 'ok');
+  toast(`Exportation réussie de ${targetOrders.length} commande(s) !`, 'ok');
 }
 function exportReportCSV() {
   const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -3356,28 +3404,96 @@ function renderRecentOrders(orders) {
   </tr>`).join('');
 }
 
-/* ─── ORDERS ─── */
+/* ─── ORDERS TABLE (ZIMOU EXPRESS 21 FIELDS) ─── */
 function renderOrders(orders) {
-  const livMap = Object.fromEntries(allLivreurs.map(l => [l.id, l.name]));
   const el = document.getElementById('orders-body');
   if (!el) return;
+  
   if (!orders.length) { 
-    el.innerHTML = '<tr><td colspan="9"><div class="empty-st"><i class="fas fa-inbox"></i><p>Aucune commande</p></div></td></tr>'; 
+    el.innerHTML = '<tr><td colspan="21"><div class="empty-st"><i class="fas fa-inbox"></i><p>Aucune commande</p></div></td></tr>'; 
     return; 
   }
-  el.innerHTML = orders.map(o => `<tr>
-    <td style="color:var(--text3);font-weight:700">#${o.id}</td>
-    <td><strong>${o.customer_name}</strong></td>
-    <td style="color:var(--text2)">${o.customer_phone}</td>
-    <td style="color:var(--accent);font-weight:700">${fmtPrice(o.total_price)}</td>
-    <td style="color:var(--text2)">${fmtPrice(o.delivery_fee || 0)}</td>
-    <td>${statusPill(o.status)}</td>
-    <td style="color:var(--text2)">${livMap[o.livreur_id] || '—'}</td>
-    <td style="color:var(--text3);font-size:.8rem">${fmtDate(o.created_at)}</td>
-    <td><button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o)})'><i class="fas fa-expand-alt"></i></button></td>
-  </tr>`).join('');
-}
 
+  // خريطة الولايات لتحويل ID إلى اسم مقروء
+  const wilayaMap = (typeof ZIMOU_DATA !== 'undefined')
+    ? Object.fromEntries(Object.entries(ZIMOU_DATA).map(([name, obj]) => [obj.id, name]))
+    : Object.fromEntries(allWilayas.map(w => [w.id, w.name]));
+
+  el.innerHTML = orders.map(o => {
+    // 1. استخراج اللقب والاسم
+    let lastName = o.last_name || '';
+    let firstName = o.first_name || '';
+    if (!lastName && o.customer_name) {
+      const parts = o.customer_name.trim().split(' ');
+      lastName = parts[0] || '';
+      firstName = parts.slice(1).join(' ') || '';
+    }
+
+    // 2. استخراج الولاية والبلدية والعنوان
+    let wilayaName = wilayaMap[o.wilaya_id] || o.wilaya_id || '';
+    let commune = o.commune || '';
+    let address = o.customer_address || '';
+
+    if (!commune && address.includes(' - ')) {
+      const addrParts = address.split(' - ');
+      if (addrParts.length >= 3) {
+        wilayaName = wilayaName || addrParts[0].trim();
+        commune = addrParts[1].trim();
+        address = addrParts.slice(2).join(' - ').trim();
+      }
+    }
+
+    // 3. تلخيص المنتجات
+    let itemsSummary = 'ICOSIUM CASUAL';
+    let items = o.items;
+    if (typeof items === 'string') {
+      try { items = JSON.parse(items); } catch(e) { items = []; }
+    }
+    if (Array.isArray(items) && items.length > 0) {
+      itemsSummary = items.map(i => `${i.qty || 1}× ${i.name || 'T-shirt'} (${i.size || 'M'})`).join(', ');
+    }
+
+    // 4. بقية حقول Zimou الافتراضية
+    const poids = o.weight || 1;
+    const typeLiv = o.delivery_type === 'stopdesk' ? 'stopdesk' : 'domicile';
+    const livrGratuite = o.free_shipping ? 'Oui' : 'Non';
+    const ouvrable = o.is_openable !== false ? 'Oui' : 'Non';
+    const idBureau = o.office_id || '—';
+    const assure = o.is_insured ? 'Oui' : 'Non';
+    const valDeclaree = o.declared_value ? `${o.declared_value} DA` : '—';
+    const usernameBoutique = 'ICOSIUM CASUAL';
+    const tagSuivi = o.tracking_number || '—';
+    const dimensions = (o.length || o.width || o.height) ? `${o.length||0}×${o.width||0}×${o.height||0}` : '—';
+
+    return `<tr>
+      <td style="color:var(--text3); font-weight:800;">#${o.id}</td>
+      <td><strong>${lastName || '—'}</strong></td>
+      <td>${firstName || '—'}</td>
+      <td style="color:var(--text2); font-family:monospace; font-weight:600;">${o.customer_phone || '—'}</td>
+      <td><span class="pill p-confirmed" style="font-size:0.7rem;">${wilayaName || '—'}</span></td>
+      <td><strong>${commune || '—'}</strong></td>
+      <td style="max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${address}">${address || '—'}</td>
+      <td style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${itemsSummary}">${itemsSummary}</td>
+      <td style="text-align:center;">${poids} kg</td>
+      <td><span class="pill ${typeLiv === 'stopdesk' ? 'p-shipped' : 'p-active'}">${typeLiv}</span></td>
+      <td style="color:var(--accent); font-weight:800; white-space:nowrap;">${fmtPrice(o.total_price)}</td>
+      <td style="text-align:center;">${livrGratuite}</td>
+      <td style="text-align:center;">${ouvrable}</td>
+      <td style="color:var(--text3);">${idBureau}</td>
+      <td style="text-align:center;">${assure}</td>
+      <td style="color:var(--text3);">${valDeclaree}</td>
+      <td style="color:var(--text3); font-size:0.75rem;">${usernameBoutique}</td>
+      <td style="font-family:monospace; color:#60a5fa;">${tagSuivi}</td>
+      <td style="color:var(--text3); font-size:0.75rem;">${dimensions}</td>
+      <td>${statusPill(o.status)}</td>
+      <td>
+        <button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o)})' title="Détails">
+          <i class="fas fa-expand-alt"></i>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
 function filterOrders(status, btnElement) {
     currentOrderFilter = status;
 
