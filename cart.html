@@ -31,7 +31,7 @@
         <h1 class="section-title">Finaliser votre commande</h1>
 
         <div class="cart-page-wrapper">
-            <!-- قائمة مشتريات السلة -->
+            <!-- قائمة السلة -->
             <div class="cart-items-section">
                 <h3>Articles dans le panier (<span id="cart-count-page">0</span>)</h3>
                 <div id="cart-items-container-page">
@@ -66,7 +66,7 @@
                             </div>
                         </div>
 
-                        <!-- رقم الهاتف 10 أرقام -->
+                        <!-- رقم الهاتف -->
                         <div class="checkout-field">
                             <label for="checkout-phone">Numéro de Téléphone (10 chiffres) *</label>
                             <div class="input-wrapper">
@@ -121,7 +121,7 @@
 
                         <div class="checkout-divider"></div>
 
-                        <!-- المجموع الصحيح بدون أخطاء -->
+                        <!-- المجموع والأسعار -->
                         <div class="checkout-pricing">
                             <div class="price-line">
                                 <span>Sous-total</span>
@@ -165,12 +165,37 @@
         </div>
     </div>
 
-    <!-- السكربت الكامل المدمج (البيانات + الحسابات + الإرسال) -->
     <script>
-    // 1. بيانات الأسعار المعتمدة من Zimou Express لـ 58 ولاية
-    const ZIMOU_PRICES = {"Adrar": 1300, "Chlef": 800, "Laghouat": 900, "Oum El Bouaghi": 800, "Batna": 800, "Béjaïa": 800, "Biskra": 900, "Béchar": 1300, "Blida": 600, "Bouira": 800, "Tamanrasset": 1700, "Tébessa": 900, "Tlemcen": 800, "Tiaret": 800, "Tizi Ouzou": 800, "Alger": 500, "Djelfa": 900, "Jijel": 800, "Sétif": 800, "Saïda": 800, "Skikda": 800, "Sidi Bel Abbès": 800, "Annaba": 800, "Guelma": 800, "Constantine": 800, "Médéa": 800, "Mostaganem": 800, "M'Sila": 800, "Mascara": 680, "Ouargla": 900, "Oran": 800, "El Bayadh": 1300, "Illizi": 1700, "Bordj Bou Arreridj": 800, "Boumerdès": 700, "El Tarf": 800, "Tindouf": 1700, "Tissemsilt": 800, "El Oued": 900, "Khenchela": 800, "Souk Ahras": 800, "Tipaza": 700, "Mila": 800, "Aïn Defla": 800, "Naâma": 1300, "Aïn Témouchent": 800, "Ghardaïa": 900, "Relizane": 800, "Timimoun": 1300, "Bordj Badji Mokhtar": 1300, "Ouled Djellal": 900, "Béni Abbès": 1300, "In Salah": 1700, "In Guezzam": 1700, "Touggourt": 900, "Djanet": 1700, "El M'Ghair": 900, "El Menia": 900};
+    // 1. عميل Supabase
+    const SB_URL = 'https://vhrvdkaqlrwplkdgwwkl.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZocnZka2FxbHJ3cGxrZGd3d2tsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzOTUyMTAsImV4cCI6MjA3ODk3MTIxMH0.mNAn3qo48y46FDkDOqUVt1xwN2smFMZL1lBNbT0OkTA';
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    // 2. البلديات كاملة (1541 بلدية) مدمجة ومباشرة
+    // 2. بيانات أسعار وأرقام ولايات Zimou Express (1 إلى 58)
+    const ZIMOU_DATA = {
+        "Adrar": { id: 1, price: 1300 }, "Chlef": { id: 2, price: 800 }, "Laghouat": { id: 3, price: 900 },
+        "Oum El Bouaghi": { id: 4, price: 800 }, "Batna": { id: 5, price: 800 }, "Béjaïa": { id: 6, price: 800 },
+        "Biskra": { id: 7, price: 900 }, "Béchar": { id: 8, price: 1300 }, "Blida": { id: 9, price: 600 },
+        "Bouira": { id: 10, price: 800 }, "Tamanrasset": { id: 11, price: 1700 }, "Tébessa": { id: 12, price: 900 },
+        "Tlemcen": { id: 13, price: 800 }, "Tiaret": { id: 14, price: 800 }, "Tizi Ouzou": { id: 15, price: 800 },
+        "Alger": { id: 16, price: 500 }, "Djelfa": { id: 17, price: 900 }, "Jijel": { id: 18, price: 800 },
+        "Sétif": { id: 19, price: 800 }, "Saïda": { id: 20, price: 800 }, "Skikda": { id: 21, price: 800 },
+        "Sidi Bel Abbès": { id: 22, price: 800 }, "Annaba": { id: 23, price: 800 }, "Guelma": { id: 24, price: 800 },
+        "Constantine": { id: 25, price: 800 }, "Médéa": { id: 26, price: 800 }, "Mostaganem": { id: 27, price: 800 },
+        "M'Sila": { id: 28, price: 800 }, "Mascara": { id: 29, price: 680 }, "Ouargla": { id: 30, price: 900 },
+        "Oran": { id: 31, price: 800 }, "El Bayadh": { id: 32, price: 1300 }, "Illizi": { id: 33, price: 1700 },
+        "Bordj Bou Arreridj": { id: 34, price: 800 }, "Boumerdès": { id: 35, price: 700 }, "El Tarf": { id: 36, price: 800 },
+        "Tindouf": { id: 37, price: 1700 }, "Tissemsilt": { id: 38, price: 800 }, "El Oued": { id: 39, price: 900 },
+        "Khenchela": { id: 40, price: 800 }, "Souk Ahras": { id: 41, price: 800 }, "Tipaza": { id: 42, price: 700 },
+        "Mila": { id: 43, price: 800 }, "Aïn Defla": { id: 44, price: 800 }, "Naâma": { id: 45, price: 1300 },
+        "Aïn Témouchent": { id: 46, price: 800 }, "Ghardaïa": { id: 47, price: 900 }, "Relizane": { id: 48, price: 800 },
+        "Timimoun": { id: 49, price: 1300 }, "Bordj Badji Mokhtar": { id: 50, price: 1300 }, "Ouled Djellal": { id: 51, price: 900 },
+        "Béni Abbès": { id: 52, price: 1300 }, "In Salah": { id: 53, price: 1700 }, "In Guezzam": { id: 54, price: 1700 },
+        "Touggourt": { id: 55, price: 900 }, "Djanet": { id: 56, price: 1700 }, "El M'Ghair": { id: 57, price: 900 },
+        "El Menia": { id: 58, price: 900 }
+    };
+
+    // 3. بلديات الجزائر الـ 1541 كاملة
     const ZIMOU_COMMUNES = {
         "Adrar": ["Adrar", "Tamest", "Reggane", "In Zghmir", "Tit", "Tsabit", "Zaouiet Kounta", "Aoulef", "Tamekten", "Tamantit", "Fenoughil", "Sali", "Akabli", "Ouled Ahmed Tammi", "Bouda", "Sebaa"],
         "Chlef": ["Chlef", "Ténès", "Bénairia", "El Karimia", "Tadjena", "Taougrite", "Beni Haoua", "Sobha", "Harchoun", "Ouled Fares", "Sidi Akkacha", "Boukadir", "Beni Rached", "Talassa", "Harenfa", "Oued Goussine", "Dahra", "Ouled Abbes", "Sendjas", "Zeboudja", "Oued Sly", "Abou El Hassan", "El Marsa", "Chettia", "Sidi Abderahmane", "Moussadek", "El Hadjadj", "Labiod Medjadja", "Oued Fodda", "Ouled Ben Abdelkader", "Bouzeghaia", "Aïn Merane", "Oum Drou", "Breira", "Beni Bouateb"],
@@ -238,7 +263,7 @@
         return parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
     }
 
-    // عرض عناصر السلة مع حساب السعر الصحيح للقطعة
+    // عرض عناصر السلة مع حساب السعر الصحيح
     function displayCartItems() {
         const container = document.getElementById('cart-items-container-page');
         const countEl = document.getElementById('cart-count-page');
@@ -293,8 +318,8 @@
         const wilaya = document.getElementById('checkout-wilaya')?.value;
         let shippingFee = 0;
 
-        if (wilaya && ZIMOU_PRICES[wilaya]) {
-            shippingFee = Number(ZIMOU_PRICES[wilaya]);
+        if (wilaya && ZIMOU_DATA[wilaya]) {
+            shippingFee = Number(ZIMOU_DATA[wilaya].price);
         }
 
         let subtotal = 0;
@@ -325,16 +350,14 @@
 
         if (!wSelect) return;
 
-        // ملء الولايات الـ 58 مع سعر التوصيل
         wSelect.innerHTML = '<option value="" disabled selected>— Choisir la Wilaya —</option>';
-        Object.keys(ZIMOU_PRICES).forEach(w => {
+        Object.keys(ZIMOU_DATA).forEach(w => {
             const opt = document.createElement('option');
             opt.value = w;
-            opt.textContent = `${w} (${ZIMOU_PRICES[w]} DA)`;
+            opt.textContent = `${ZIMOU_DATA[w].id} - ${w} (${ZIMOU_DATA[w].price} DA)`;
             wSelect.appendChild(opt);
         });
 
-        // تفعيل استماع اختيار الولاية لتعبئة البلديات وتحديث السعر فوراً
         wSelect.onchange = function() {
             const selectedWilaya = this.value;
             cSelect.innerHTML = '<option value="" disabled selected>— Choisir la Commune —</option>';
@@ -356,7 +379,7 @@
         document.getElementById('checkout-delivery-type').onchange = () => updatePricing();
     }
 
-    // التحقق من 10 أرقام للهاتف
+    // هاتف 10 أرقام
     const phoneInput = document.getElementById('checkout-phone');
     phoneInput.addEventListener('input', function() {
         this.value = this.value.replace(/[^0-9]/g, '');
@@ -370,7 +393,7 @@
         }
     });
 
-    // إرسال الطلب إلى Supabase
+    // إرسال وحفظ الطلب في Supabase
     document.getElementById('checkout-form-page').onsubmit = async function(e) {
         e.preventDefault();
 
@@ -401,15 +424,21 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
 
         const { shippingFee, grandTotal } = updatePricing();
+        const fName = document.getElementById('checkout-first-name').value.trim();
+        const lName = document.getElementById('checkout-last-name').value.trim();
+        const detailedAddress = document.getElementById('checkout-address').value.trim();
+
+        // إرسال معرف الولاية كرقم صحيح (1-58) لتوافق Supabase
+        const wilayaNumericId = ZIMOU_DATA[wilaya] ? ZIMOU_DATA[wilaya].id : 16;
 
         const payload = {
-            first_name: document.getElementById('checkout-first-name').value.trim(),
-            last_name: document.getElementById('checkout-last-name').value.trim(),
-            customer_name: `${document.getElementById('checkout-last-name').value.trim()} ${document.getElementById('checkout-first-name').value.trim()}`,
+            first_name: fName,
+            last_name: lName,
+            customer_name: `${lName} ${fName}`,
             customer_phone: phone,
-            wilaya_id: wilaya,
+            wilaya_id: wilayaNumericId,
             commune: commune,
-            customer_address: document.getElementById('checkout-address').value.trim(),
+            customer_address: `${wilaya} - ${commune} - ${detailedAddress}`,
             delivery_type: document.getElementById('checkout-delivery-type').value,
             delivery_fee: shippingFee,
             total_price: grandTotal,
@@ -418,24 +447,23 @@
         };
 
         try {
-            const SB_URL = 'https://vhrvdkaqlrwplkdgwwkl.supabase.co';
-            const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZocnZka2FxbHJ3cGxrZGd3d2tsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzOTUyMTAsImV4cCI6MjA3ODk3MTIxMH0.mNAn3qo48y46FDkDOqUVt1xwN2smFMZL1lBNbT0OkTA';
-            const client = supabase.createClient(SB_URL, SB_KEY);
+            const { data, error } = await supabaseClient.from('orders').insert([payload]).select();
 
-            const { error } = await client.from('orders').insert([payload]);
-            if (error) throw error;
+            if (error) {
+                console.error("Supabase error detail:", error);
+                throw error;
+            }
 
             localStorage.removeItem('icosium_cart');
             document.getElementById('order-success-modal').style.display = 'flex';
         } catch (err) {
-            console.error(err);
-            alert("حدث خطأ أثناء إرسال الطلب.");
+            console.error("Order error:", err);
+            alert("حدث خطأ أثناء حفظ الطلب: " + (err.message || "Erreur de base de données"));
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-shield-halved"></i> Confirmer la commande';
         }
     };
 
-    // التشغيل الفوري المستقل
     document.addEventListener('DOMContentLoaded', () => {
         setupWilayasAndCommunes();
         displayCartItems();
