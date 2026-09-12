@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="images/logo3.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <script src="zimou_data.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- استدعاء ملف البيانات المعتمد -->
+    <script src="zimou_data.js"></script>
 </head>
 <body> 
    <header class="main-header">
@@ -19,11 +20,9 @@
                     ICOSIUM
                 </a>
             </div>
-            
             <nav class="main-nav">
                 <a href="index.html">Retour à l'accueil</a>
             </nav>
-
             <div class="header-controls">
                 <button id="dark-mode-toggle"><i class="fas fa-moon"></i></button>
             </div>
@@ -34,7 +33,7 @@
         <h1 class="section-title">Finaliser votre commande</h1>
 
         <div class="cart-page-wrapper">
-            
+            <!-- عناصر السلة -->
             <div class="cart-items-section">
                 <h3>Articles dans le panier (<span id="cart-count-page">0</span>)</h3>
                 <div id="cart-items-container-page">
@@ -42,15 +41,15 @@
                 </div>
             </div>
 
+            <!-- نموذج الطلب -->
             <div class="cart-form-section">
                 <div class="cart-summary-box">
                     <div class="checkout-box-header">
                         <i class="fas fa-truck-fast"></i>
-                        <h3>Détails de livraison</h3>
+                        <h3>Détails de livraison (Zimou Express)</h3>
                     </div>
                     
-                    <form id="checkout-form-page" onsubmit="handleCartCheckout(event)">
-                        <!-- اللقب والاسم -->
+                    <form id="checkout-form-page">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                             <div class="checkout-field">
                                 <label for="checkout-last-name">Nom (اللقب) *</label>
@@ -69,34 +68,31 @@
                             </div>
                         </div>
 
-                        <!-- رقم الهاتف -->
                         <div class="checkout-field">
                             <label for="checkout-phone">Numéro de Téléphone (10 chiffres) *</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-phone"></i>
-                                <input type="tel" id="checkout-phone" required placeholder="05XXXXXXXX / 06... / 07..." maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, ''); validatePhoneRealtime(this);">
+                                <input type="tel" id="checkout-phone" required placeholder="05XXXXXXXX / 06... / 07..." maxlength="10">
                             </div>
                             <small id="phone-error-msg" style="color:#f87171; font-size:0.75rem; display:none; margin-top:4px;">Le numéro doit contenir exactement 10 chiffres (ex: 0555000000).</small>
                         </div>
 
-                        <!-- نوع الشحن -->
                         <div class="checkout-field">
                             <label for="checkout-delivery-type">Type de livraison (طريقة الشحن) *</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-box"></i>
-                                <select id="checkout-delivery-type" required onchange="calculateCartTotals()">
+                                <select id="checkout-delivery-type">
                                     <option value="domicile" selected>À domicile (توصيل إلى باب المنزل)</option>
                                     <option value="stopdesk">Stopdesk (استلام من مكتب Zimou Express)</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- الولاية والبلدية -->
                         <div class="checkout-field">
                             <label for="checkout-wilaya">Wilaya de livraison *</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-map-location-dot"></i>
-                                <select id="checkout-wilaya" required onchange="onCartWilayaChange(this.value)">
+                                <select id="checkout-wilaya" required>
                                     <option value="" disabled selected>— Choisir la Wilaya —</option>
                                 </select>
                             </div>
@@ -106,7 +102,7 @@
                             <label for="checkout-commune">Commune (البلدية) *</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-city"></i>
-                                <select id="checkout-commune" required>
+                                <select id="checkout-commune" required disabled>
                                     <option value="" disabled selected>— Sélectionnez d'abord une wilaya —</option>
                                 </select>
                             </div>
@@ -122,7 +118,7 @@
 
                         <div class="checkout-divider"></div>
 
-                        <!-- ملخص الحساب الصافي -->
+                        <!-- حساب الإجمالي الصحيح -->
                         <div class="checkout-pricing">
                             <div class="price-line">
                                 <span>Sous-total</span>
@@ -149,57 +145,133 @@
                     </form>
                 </div>
             </div>
-
         </div>
     </main>
 
-    <!-- نافذة تأكيد واستلام الطلب -->
+    <!-- نافذة تأكيد الطلب -->
     <div id="order-success-modal" class="modal" style="display:none; align-items:center; justify-content:center; z-index: 3000;">
         <div class="modal-content" style="max-width: 460px; text-align: center; padding: 35px 25px; border-radius: 20px;">
             <div style="width: 70px; height: 70px; background: rgba(0, 200, 150, 0.15); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
                 <i class="fas fa-check"></i>
             </div>
-            <h2 id="success-title" style="font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 12px;">Commande Confirmée !</h2>
-            <p id="success-msg" style="color: var(--color-text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px;">Merci pour votre confiance. Votre commande est enregistrée avec succès.</p>
-            
+            <h2 style="font-size: 1.8rem; margin-bottom: 12px;">Commande Confirmée !</h2>
+            <p style="color: var(--color-text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px;">Merci pour votre confiance. Votre commande est enregistrée avec succès.</p>
             <button type="button" class="btn-confirm-order" style="margin: 0 auto; max-width: 220px;" onclick="window.location.href='index.html'">
                 <i class="fas fa-arrow-left"></i> <span>Retour à l'accueil</span>
             </button>
         </div>
     </div>
 
-    <!-- استدعاء ملف script.js للمكونات العامة فقط -->
-    <script src="script.js"></script>
-
+    <!-- سكربت التحكم المستقل بالكامل دون أي تعارض -->
     <script>
-    // تهيئة الاتصال بـ Supabase
+    // تهيئة عميل Supabase
     const SB_URL = 'https://vhrvdkaqlrwplkdgwwkl.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZocnZka2FxbHJ3cGxrZGd3d2tsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzOTUyMTAsImV4cCI6MjA3ODk3MTIxMH0.mNAn3qo48y46FDkDOqUVt1xwN2smFMZL1lBNbT0OkTA';
-    const supabaseDb = (typeof supabase !== 'undefined') ? supabase.createClient(SB_URL, SB_KEY) : null;
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    function parseCleanPrice(val) {
-        if (typeof val === 'number') return val;
+    // تنظيف الأرقام والأسعار
+    function cleanNumber(val) {
         if (!val) return 0;
-        const cleaned = String(val).replace(/[^0-9.]/g, '');
-        return parseFloat(cleaned) || 0;
+        if (typeof val === 'number') return val;
+        return parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
     }
 
-    function validatePhoneRealtime(input) {
-        const errorEl = document.getElementById('phone-error-msg');
-        const val = input.value.trim();
-        if (val.length > 0 && (val.length !== 10 || !/^(05|06|07)/.test(val))) {
-            if (errorEl) errorEl.style.display = 'block';
-            input.style.borderColor = '#f87171';
-        } else {
-            if (errorEl) errorEl.style.display = 'none';
-            input.style.borderColor = '';
+    // عرض عناصر السلة وحساب الإجمالي الصحيح
+    function displayCartItems() {
+        const container = document.getElementById('cart-items-container-page');
+        const countEl = document.getElementById('cart-count-page');
+        let cart = [];
+        try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) { cart = []; }
+
+        if (countEl) countEl.textContent = cart.reduce((sum, item) => sum + (parseInt(item.qty || item.quantity || 1, 10)), 0);
+
+        if (!container) return;
+
+        if (!cart.length) {
+            container.innerHTML = '<p style="text-align:center; padding:30px; color:#8fa3bb;">Votre panier est vide.</p>';
+            updatePricing(0);
+            return;
         }
+
+        let subtotal = 0;
+        container.innerHTML = cart.map((item, idx) => {
+            const qty = parseInt(item.qty || item.quantity || 1, 10);
+            // تحديد السعر المفرد وتفادي الضرب المزدوج
+            const unitPrice = item.unit_price ? cleanNumber(item.unit_price) : (cleanNumber(item.price) / (qty || 1));
+            const lineTotal = unitPrice * qty;
+            subtotal += lineTotal;
+
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.08); gap:12px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="${item.image_url || 'images/logo3.png'}" style="width:55px; height:55px; border-radius:10px; object-fit:cover;">
+                        <div>
+                            <strong style="display:block; font-size:0.95rem;">${item.name}</strong>
+                            <small style="color:#8fa3bb;">Taille: <strong>${item.size || '-'}</strong> | Couleur: <strong>${item.color || '-'}</strong> | Qté: <strong>${qty}</strong></small>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        <span style="font-weight:700; color:#00c896;">${lineTotal.toLocaleString('fr-DZ')} DA</span>
+                        <i class="fas fa-trash" style="cursor:pointer; color:#f87171;" onclick="deleteItem(${idx})"></i>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        updatePricing(subtotal);
     }
 
-    function populateWilayas() {
-        const wSelect = document.getElementById('checkout-wilaya');
-        if (!wSelect || typeof ZIMOU_PRICES === 'undefined') return;
+    // حذف عنصر
+    window.deleteItem = function(idx) {
+        let cart = [];
+        try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) {}
+        cart.splice(idx, 1);
+        localStorage.setItem('icosium_cart', JSON.stringify(cart));
+        displayCartItems();
+    };
 
+    // تحديث الأسعار وشريط الإجمالي
+    function updatePricing(subtotalOverride) {
+        const wilaya = document.getElementById('checkout-wilaya')?.value;
+        let shippingFee = 0;
+
+        if (wilaya && typeof ZIMOU_PRICES !== 'undefined' && ZIMOU_PRICES[wilaya]) {
+            shippingFee = Number(ZIMOU_PRICES[wilaya]);
+        }
+
+        let subtotal = 0;
+        if (typeof subtotalOverride === 'number') {
+            subtotal = subtotalOverride;
+        } else {
+            let cart = [];
+            try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) {}
+            cart.forEach(item => {
+                const qty = parseInt(item.qty || item.quantity || 1, 10);
+                const unitPrice = item.unit_price ? cleanNumber(item.unit_price) : (cleanNumber(item.price) / (qty || 1));
+                subtotal += (unitPrice * qty);
+            });
+        }
+
+        const grandTotal = subtotal + shippingFee;
+
+        document.getElementById('cart-total-price-page').textContent = subtotal.toLocaleString('fr-DZ');
+        document.getElementById('delivery-fee-display').textContent = shippingFee.toLocaleString('fr-DZ');
+        document.getElementById('final-total-price').textContent = grandTotal.toLocaleString('fr-DZ');
+
+        return { subtotal, shippingFee, grandTotal };
+    }
+
+    // تهيئة الولايات والبلديات
+    function setupWilayasAndCommunes() {
+        const wSelect = document.getElementById('checkout-wilaya');
+        const cSelect = document.getElementById('checkout-commune');
+
+        if (!wSelect || typeof ZIMOU_PRICES === 'undefined') {
+            console.error("ZIMOU_PRICES غير محملة. تأكد من وجود ملف zimou_data.js.");
+            return;
+        }
+
+        // ملء الولايات
         wSelect.innerHTML = '<option value="" disabled selected>— Choisir la Wilaya —</option>';
         Object.keys(ZIMOU_PRICES).forEach(w => {
             const opt = document.createElement('option');
@@ -207,147 +279,108 @@
             opt.textContent = `${w} (${ZIMOU_PRICES[w]} DA)`;
             wSelect.appendChild(opt);
         });
-    }
 
-    function onCartWilayaChange(wilaya) {
-        const cSelect = document.getElementById('checkout-commune');
-        if (!cSelect) return;
+        // الاستماع لتغيير الولاية
+        wSelect.onchange = function() {
+            const selectedWilaya = this.value;
+            cSelect.innerHTML = '<option value="" disabled selected>— Choisir la Commune —</option>';
 
-        cSelect.innerHTML = '<option value="" disabled selected>— Choisir la Commune —</option>';
-        
-        if (wilaya && typeof ZIMOU_COMMUNES !== 'undefined' && ZIMOU_COMMUNES[wilaya]) {
-            ZIMOU_COMMUNES[wilaya].forEach(commune => {
-                const opt = document.createElement('option');
-                opt.value = commune;
-                opt.textContent = commune;
-                cSelect.appendChild(opt);
-            });
-            cSelect.disabled = false;
-        } else {
-            cSelect.disabled = true;
-        }
-        calculateCartTotals();
-    }
-
-    function calculateCartTotals() {
-        const wilaya = document.getElementById('checkout-wilaya')?.value;
-        let shippingFee = 0;
-        if (wilaya && typeof ZIMOU_PRICES !== 'undefined' && ZIMOU_PRICES[wilaya]) {
-            shippingFee = Number(ZIMOU_PRICES[wilaya]);
-        }
-
-        let cartItems = [];
-        try { 
-            cartItems = JSON.parse(localStorage.getItem('icosium_cart')) || []; 
-        } catch(e) { cartItems = []; }
-
-        let subtotal = 0;
-        cartItems.forEach(item => {
-            // التحقق مما إذا كان السعر هو الإجمالي للسطر أم للقطعة الواحدة
-            const rawPrice = parseCleanPrice(item.unit_price || item.price);
-            const qty = parseInt(item.qty || item.quantity || 1, 10);
-            
-            // إذا وُجد unit_price نضرب بالكمية، وإلا فالسعر مخزن مسبقاً كإجمالي
-            if (item.unit_price) {
-                subtotal += (rawPrice * qty);
+            if (selectedWilaya && typeof ZIMOU_COMMUNES !== 'undefined' && ZIMOU_COMMUNES[selectedWilaya]) {
+                ZIMOU_COMMUNES[selectedWilaya].forEach(comm => {
+                    const opt = document.createElement('option');
+                    opt.value = comm;
+                    opt.textContent = comm;
+                    cSelect.appendChild(opt);
+                });
+                cSelect.disabled = false;
             } else {
-                subtotal += rawPrice;
+                cSelect.disabled = true;
             }
-        });
+            updatePricing();
+        };
 
-        const finalTotal = subtotal + shippingFee;
-
-        const subtotalEl = document.getElementById('cart-total-price-page');
-        const feeEl = document.getElementById('delivery-fee-display');
-        const totalEl = document.getElementById('final-total-price');
-
-        if (subtotalEl) subtotalEl.textContent = subtotal.toLocaleString('fr-DZ');
-        if (feeEl) feeEl.textContent = shippingFee.toLocaleString('fr-DZ');
-        if (totalEl) totalEl.textContent = finalTotal.toLocaleString('fr-DZ');
-
-        return { subtotal, shippingFee, finalTotal };
+        document.getElementById('checkout-delivery-type').onchange = () => updatePricing();
     }
 
-    async function handleCartCheckout(e) {
+    // التحقق من رقم الهاتف أثناء الكتابة
+    const phoneInput = document.getElementById('checkout-phone');
+    phoneInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        const err = document.getElementById('phone-error-msg');
+        if (this.value.length > 0 && (this.value.length !== 10 || !/^(05|06|07)/.test(this.value))) {
+            err.style.display = 'block';
+            this.style.borderColor = '#f87171';
+        } else {
+            err.style.display = 'none';
+            this.style.borderColor = '';
+        }
+    });
+
+    // إرسال الطلب
+    document.getElementById('checkout-form-page').onsubmit = async function(e) {
         e.preventDefault();
 
-        const phoneInput = document.getElementById('checkout-phone');
-        const phone = phoneInput ? phoneInput.value.trim() : '';
-
-        if (phone.length !== 10 || !/^(05|06|07)[0-9]{8}$/.test(phone)) {
-            alert('❌ يرجى إدخال رقم هاتف صحيح مكوّن من 10 أرقام يبدأ بـ 05 أو 06 أو 07.');
-            phoneInput?.focus();
+        const phone = phoneInput.value.trim();
+        if (!/^(05|06|07)[0-9]{8}$/.test(phone)) {
+            alert('❌ رقم الهاتف غير صحيح! يجب أن يتكون من 10 أرقام ويبدأ بـ 05 أو 06 أو 07.');
+            phoneInput.focus();
             return;
         }
 
-        const wilaya = document.getElementById('checkout-wilaya')?.value;
-        const commune = document.getElementById('checkout-commune')?.value;
+        const wilaya = document.getElementById('checkout-wilaya').value;
+        const commune = document.getElementById('checkout-commune').value;
 
         if (!wilaya || !commune) {
             alert('❌ يرجى اختيار الولاية والبلدية.');
             return;
         }
 
-        let cartItems = [];
-        try { 
-            cartItems = JSON.parse(localStorage.getItem('icosium_cart')) || []; 
-        } catch(e) { cartItems = []; }
-
-        if (!cartItems.length) {
+        let cart = [];
+        try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) {}
+        if (!cart.length) {
             alert('السلة فارغة!');
             return;
         }
 
-        const lName = document.getElementById('checkout-last-name').value.trim();
-        const fName = document.getElementById('checkout-first-name').value.trim();
-        const delType = document.getElementById('checkout-delivery-type').value;
-        const address = document.getElementById('checkout-address').value.trim();
-        const { shippingFee, finalTotal } = calculateCartTotals();
+        const btn = document.getElementById('checkout-submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
 
-        const submitBtn = document.getElementById('checkout-submit-btn');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
-        }
+        const { shippingFee, grandTotal } = updatePricing();
 
-        const orderPayload = {
-            first_name: fName,
-            last_name: lName,
-            customer_name: `${lName} ${fName}`,
+        const payload = {
+            first_name: document.getElementById('checkout-first-name').value.trim(),
+            last_name: document.getElementById('checkout-last-name').value.trim(),
+            customer_name: `${document.getElementById('checkout-last-name').value.trim()} ${document.getElementById('checkout-first-name').value.trim()}`,
             customer_phone: phone,
             wilaya_id: wilaya,
             commune: commune,
-            customer_address: address,
-            delivery_type: delType,
+            customer_address: document.getElementById('checkout-address').value.trim(),
+            delivery_type: document.getElementById('checkout-delivery-type').value,
             delivery_fee: shippingFee,
-            total_price: finalTotal,
-            items: cartItems,
+            total_price: grandTotal,
+            items: cart,
             status: 'Pending'
         };
 
         try {
-            const client = supabaseDb || supabaseClient;
-            const { error } = await client.from('orders').insert([orderPayload]);
-
+            const { error } = await supabaseClient.from('orders').insert([payload]);
             if (error) throw error;
 
             localStorage.removeItem('icosium_cart');
-            const modal = document.getElementById('order-success-modal');
-            if (modal) modal.style.display = 'flex';
+            document.getElementById('order-success-modal').style.display = 'flex';
         } catch (err) {
-            console.error("Order error:", err);
-            alert("حدث خطأ أثناء حفظ الطلب، يرجى المحاولة ثانية.");
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-shield-halved"></i> Confirmer la commande';
-            }
+            console.error(err);
+            alert("حدث خطأ أثناء حفظ الطلب.");
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-shield-halved"></i> Confirmer la commande';
         }
-    }
+    };
 
-    // تشغيل القوائم فور تحميل الصفحة
-    window.addEventListener('load', () => {
-        populateWilayas();
-        calculateCartTotals();
+    // تشغيل القوائم فور فتح الصفحة
+    window.addEventListener('DOMContentLoaded', () => {
+        setupWilayasAndCommunes();
+        displayCartItems();
     });
     </script>
 </body>
