@@ -3421,6 +3421,7 @@ function openOrderModal(o) {
   openModal('modal-order');
 }
 
+// ─── الدالة الرئيسية بعد التحديث والدمج الكامل ───
 async function saveOrder() {
   const newStatus = document.getElementById('mod-status-sel').value;
   const livreurId = document.getElementById('mod-livreur-sel').value || null;
@@ -3434,8 +3435,13 @@ async function saveOrder() {
       return;
     }
 
-    // 2. إذا تم تغيير الحالة إلى Confirmed ولم تكن مسبقاً Confirmed، نقوم بخصم المخزون
+    let trackingCode = order.tracking_number || null;
+    let labelUrl = order.tracking_label_url || null;
+
+    // 2. إذا تم تغيير الحالة إلى Confirmed ولم تكن مسبقاً Confirmed
     if (newStatus === 'Confirmed' && order.status !== 'Confirmed') {
+      
+      // أ) خصم المخزون
       let items = order.items;
       if (typeof items === 'string') {
         try { items = JSON.parse(items); } catch(e) { items = []; }
@@ -3447,13 +3453,13 @@ async function saveOrder() {
           const qtyToDeduct = parseInt(item.qty, 10) || 1;
           if (!pId) continue;
 
-          // جلب بيانات المنتج الحالية من قاعدة البيانات
+          // جلب بيانات المنتج الحالية
           const { data: prod } = await dbFrom('products').select('*').eq('id', pId).single();
           if (prod) {
-            // أ) خصم المخزون الكلي
+            // خصم المخزون الكلي
             const updatedStock = Math.max(0, (parseInt(prod.stock, 10) || 0) - qtyToDeduct);
 
-            // ب) خصم الكمية من المقاس واللون المحددين داخل مصفوفة sizes
+            // خصم الكمية من المقاس واللون المحددين
             let sizesArr = prod.sizes;
             if (typeof sizesArr === 'string') {
               try { sizesArr = JSON.parse(sizesArr); } catch(e) { sizesArr = []; }
@@ -3470,13 +3476,13 @@ async function saveOrder() {
               });
             }
 
-            // ج) حفظ التحديث في جدول المنتجات
+            // حفظ التحديث في جدول المنتجات
             await dbFrom('products').update({
               stock: updatedStock,
               sizes: sizesArr
             }).eq('id', pId);
 
-            // د) تسجيل حركة خروج في جدول mouvements de stock
+            // تسجيل حركة خروج في جدول mouvements de stock
             await dbFrom('stock_movements').insert([{
               product_id: pId,
               type: 'OUT',
@@ -3486,18 +3492,37 @@ async function saveOrder() {
           }
         }
       }
+
+      // ب) إرسال الطرد تلقائياً إلى منصة ZR Express إذا لم يكن قد أُرسل من قبل
+      if (!trackingCode && ZR_API_TOKEN !== 'YOUR_ZR_EXPRESS_API_TOKEN_HERE') {
+        const zrResult = await createZRColis(order);
+        if (zrResult.success) {
+          trackingCode = zrResult.tracking;
+          labelUrl = zrResult.labelUrl;
+          toast(`Colis envoyé à ZR Express ! Suivi: ${trackingCode}`, 'ok');
+        } else {
+          toast(`Avertissement ZR: ${zrResult.message}`, 'err');
+        }
+      }
     }
 
-    // 3. تحديث بيانات الطلب
-    const { error: updateErr } = await dbFrom('orders').update({
+    // 3. تحديث بيانات الطلب في Supabase (مع رقم التتبع إن وجد)
+    const updatePayload = {
       status: newStatus,
       livreur_id: livreurId,
-      note_admin: noteAdmin,
-    }).eq('id', currentOrderId);
+      note_admin: noteAdmin
+    };
+
+    if (trackingCode) {
+      updatePayload.tracking_number = trackingCode;
+      updatePayload.tracking_label_url = labelUrl;
+    }
+
+    const { error: updateErr } = await dbFrom('orders').update(updatePayload).eq('id', currentOrderId);
 
     if (!updateErr) {
-      toast(newStatus === 'Confirmed' ? 'Commande confirmée et stock déduit avec succès !' : 'Commande mise à jour !');
-      logAudit('order', `Commande #${currentOrderId} mise à jour → ${newStatus}`, 'order');
+      toast(newStatus === 'Confirmed' ? 'Commande confirmée, stock déduit et synchronisée !' : 'Commande mise à jour !');
+      logAudit('order', `Commande #${currentOrderId} mise à jour → ${newStatus}${trackingCode ? ` (ZR: ${trackingCode})` : ''}`, 'order');
       addNotification('Commande mise à jour', `#${currentOrderId} → ${newStatus}`);
       closeModal('modal-order'); 
       await loadAll();
@@ -3507,6 +3532,64 @@ async function saveOrder() {
   } catch (err) {
     console.error("Erreur saveOrder:", err);
     toast("Une erreur est survenue lors de l'enregistrement.", 'err');
+  }
+}
+   // ─── إعدادات ربط منصة ZR Express ───
+const ZR_API_TOKEN = '363525|KhTO5mplBrKLkJpQNJutKtxCZSiZ5nfpUCBhVfeHe50fbc16'; // ضع الـ Token الخاص بحسابك هنا
+const ZR_API_URL = 'https://zimou.express/api/v3/packages'; // رابط إنشاء الطرود الخاص بـ 
+
+// دالة مساعدة لإنشاء الطرد تلقائياً في ZR Express
+async function createZRColis(order) {
+  let itemsSummary = 'Vêtements ICOSIUM CASUAL';
+  let items = order.items;
+  if (typeof items === 'string') {
+    try { items = JSON.parse(items); } catch(e) { items = []; }
+  }
+  if (Array.isArray(items) && items.length > 0) {
+    itemsSummary = items.map(i => `${i.qty || 1}x ${i.name} (${i.size || 'M'})`).join(', ');
+  }
+
+  // استخراج البلدية والعنوان
+  const addrParts = (order.customer_address || '').split('-');
+  const commune = addrParts[0] ? addrParts[0].trim() : (order.customer_address || 'Centre');
+
+  const payload = {
+    client_name: order.customer_name || 'Client',
+    client_phone: order.customer_phone || '',
+    wilaya_id: order.wilaya_id || 16, // افتراضياً 16 الجزائر العاصمة إن لم تُحدد
+    commune: commune,
+    address: order.customer_address || '',
+    montant: parseFloat(order.total_price || 0),
+    description: itemsSummary,
+    type_livraison: 'domicile', // 'domicile' أو 'stopdesk'
+    remarque: order.note_admin || ''
+  };
+
+  try {
+    const res = await fetch(ZR_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ZR_API_TOKEN}`,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await res.json();
+    if (res.ok && (result.tracking || result.barcode || result.id)) {
+      return {
+        success: true,
+        tracking: result.tracking || result.barcode || result.id,
+        labelUrl: result.label_url || null
+      };
+    } else {
+      console.warn('ZR Express Response Error:', result);
+      return { success: false, message: result.message || 'Erreur ZR API' };
+    }
+  } catch (e) {
+    console.error('ZR Express Network Error:', e);
+    return { success: false, message: 'Erreur de connexion API ZR' };
   }
 }
 
