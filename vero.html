@@ -3279,11 +3279,13 @@ function exportOrdersExcel() {
     return;
   }
 
+  // خريطة الولايات لتحويل ID إلى اسم مقروء
   const wilayaMap = (typeof ZIMOU_DATA !== 'undefined')
     ? Object.fromEntries(Object.entries(ZIMOU_DATA).map(([name, obj]) => [obj.id, name]))
     : Object.fromEntries(allWilayas.map(w => [w.id, w.name]));
 
   const rows = targetOrders.map(o => {
+    // 1. معالجة الاسم واللقب
     let lastName = o.last_name || '';
     let firstName = o.first_name || '';
     if (!lastName && o.customer_name) {
@@ -3292,6 +3294,7 @@ function exportOrdersExcel() {
       firstName = parts.slice(1).join(' ') || '';
     }
 
+    // 2. معالجة العنوان والولاية
     let wilayaName = wilayaMap[o.wilaya_id] || o.wilaya_id || '';
     let commune = o.commune || '';
     let address = o.customer_address || '';
@@ -3305,6 +3308,7 @@ function exportOrdersExcel() {
       }
     }
 
+    // 3. تلخيص المنتجات
     let itemsSummary = 'ICOSIUM CASUAL';
     let items = o.items;
     if (typeof items === 'string') {
@@ -3313,6 +3317,13 @@ function exportOrdersExcel() {
     if (Array.isArray(items) && items.length > 0) {
       itemsSummary = items.map(i => `${i.qty || 1}x ${i.name} (${i.size || 'M'})`).join(' + ');
     }
+
+    // 4. تصحيح المصطلحات لتتوافق مع نظام Zimou Express بدقة
+    // Zimou تستخدم "Express" للمنزل، و "Point Relais" للمكتب
+    const zrTypeLivraison = (o.delivery_type === 'stopdesk' || o.delivery_type === 'Point Relais') ? 'Point Relais' : 'Express';
+    
+    // Zimou تطلب الوزن بالغرام (1000 غرام = 1 كغ)
+    const zrPoids = (o.weight || 1) * 1000; 
 
     return {
       'Nom*': lastName,
@@ -3323,8 +3334,8 @@ function exportOrdersExcel() {
       'Wilaya*': wilayaName,
       'Nº commande*': String(o.id),
       'Produit*': itemsSummary,
-      'Poids*': o.weight || 1,
-      'Type de livraison': o.delivery_type === 'stopdesk' ? 'stopdesk' : 'domicile',
+      'Poids*': zrPoids, // يجب أن يكون بالغرام
+      'Type de livraison': zrTypeLivraison, // "Express" أو "Point Relais"
       'Prix*': parseFloat(o.total_price || 0),
       'Livraison gratuite': o.free_shipping ? 'Oui' : 'Non',
       'Ouvrable': o.is_openable !== false ? 'Oui' : 'Non',
@@ -3339,6 +3350,7 @@ function exportOrdersExcel() {
     };
   });
 
+  // إنشاء مصنف Excel وتنزيله
   const worksheet = XLSX.utils.json_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
