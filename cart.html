@@ -179,164 +179,184 @@
         </div>
     </div>
 
-    <!-- استدعاء ملف البيانات المولد (Zimou Express) + Supabase -->
-    <script src="zimou_data.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
+<!-- ضع هذا الكود في أسفل cart.html قبل إغلاق </body> -->
+<script src="zimou_data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script>
 
-    <script>
-    // 1. التحقق المباشر أثناء كتابة رقم الهاتف
-    function validatePhoneRealtime(input) {
-        const errorEl = document.getElementById('phone-error-msg');
-        const val = input.value.trim();
-        if (val.length > 0 && (val.length !== 10 || !/^(05|06|07)/.test(val))) {
-            errorEl.style.display = 'block';
-            input.style.borderColor = '#f87171';
-        } else {
-            errorEl.style.display = 'none';
-            input.style.borderColor = '';
-        }
+<script>
+// 1. تنظيف أي صيغة سعر نصية وتحويلها إلى رقم صحيح بدقة
+function parseCleanPrice(val) {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    const cleaned = String(val).replace(/[^0-9.]/g, '');
+    return parseFloat(cleaned) || 0;
+}
+
+// 2. التحقق المباشر من رقم الهاتف (10 أرقام)
+function validatePhoneRealtime(input) {
+    const errorEl = document.getElementById('phone-error-msg');
+    const val = input.value.trim();
+    if (val.length > 0 && (val.length !== 10 || !/^(05|06|07)/.test(val))) {
+        if (errorEl) errorEl.style.display = 'block';
+        input.style.borderColor = '#f87171';
+    } else {
+        if (errorEl) errorEl.style.display = 'none';
+        input.style.borderColor = '';
+    }
+}
+
+// 3. تعبئة قائمة الولايات والبلديات
+function populateWilayas() {
+    const wSelect = document.getElementById('checkout-wilaya');
+    if (!wSelect || typeof ZIMOU_PRICES === 'undefined') return;
+
+    wSelect.innerHTML = '<option value="" disabled selected>— Choisir la Wilaya —</option>';
+    Object.keys(ZIMOU_PRICES).forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = w;
+        opt.textContent = w;
+        wSelect.appendChild(opt);
+    });
+}
+
+function onCartWilayaChange(wilaya) {
+    const cSelect = document.getElementById('checkout-commune');
+    if (!cSelect) return;
+
+    cSelect.innerHTML = '<option value="" disabled selected>— Choisir la Commune —</option>';
+    
+    if (wilaya && typeof ZIMOU_COMMUNES !== 'undefined' && ZIMOU_COMMUNES[wilaya]) {
+        ZIMOU_COMMUNES[wilaya].forEach(commune => {
+            const opt = document.createElement('option');
+            opt.value = commune;
+            opt.textContent = commune;
+            cSelect.appendChild(opt);
+        });
+        cSelect.disabled = false;
+    } else {
+        cSelect.disabled = true;
+    }
+    calculateCartTotals();
+}
+
+// 4. حساب سلة المشتريات والمجموع الكلي بدقة حسابية تامة
+function calculateCartTotals() {
+    const wilaya = document.getElementById('checkout-wilaya')?.value;
+    
+    // سعر التوصيل نفسه للمكتب والمنزل وفق تسعيرة Zimou
+    let shippingFee = 0;
+    if (wilaya && typeof ZIMOU_PRICES !== 'undefined' && ZIMOU_PRICES[wilaya]) {
+        shippingFee = Number(ZIMOU_PRICES[wilaya]);
     }
 
-    // 2. تهيئة وتعبئة الولايات
-    document.addEventListener('DOMContentLoaded', () => {
-        initCartWilayas();
-        calculateCartTotals();
+    let cart = [];
+    try { 
+        cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; 
+    } catch(e) { cart = []; }
+
+    let subtotal = 0;
+    cart.forEach(item => {
+        const itemPrice = parseCleanPrice(item.price);
+        const itemQty = parseInt(item.quantity || item.qty || 1, 10);
+        subtotal += (itemPrice * itemQty);
     });
 
-    function initCartWilayas() {
-        const wSelect = document.getElementById('checkout-wilaya');
-        if (!wSelect) return;
+    const finalTotal = Number(subtotal) + Number(shippingFee);
 
-        if (typeof ZIMOU_PRICES !== 'undefined') {
-            let options = '<option value="" disabled selected>— Choisir la Wilaya —</option>';
-            Object.keys(ZIMOU_PRICES).forEach(w => {
-                options += `<option value="${w}">${w}</option>`;
-            });
-            wSelect.innerHTML = options;
-        }
+    const subtotalEl = document.getElementById('cart-total-price-page');
+    const feeEl = document.getElementById('delivery-fee-display');
+    const totalEl = document.getElementById('final-total-price');
+
+    if (subtotalEl) subtotalEl.textContent = subtotal.toLocaleString('fr-DZ');
+    if (feeEl) feeEl.textContent = shippingFee.toLocaleString('fr-DZ');
+    if (totalEl) totalEl.textContent = finalTotal.toLocaleString('fr-DZ');
+
+    return { subtotal, shippingFee, finalTotal };
+}
+
+// 5. تأكيد الطلب مع التحقق الإلزامي
+async function handleCartCheckout(e) {
+    e.preventDefault();
+
+    const phoneInput = document.getElementById('checkout-phone');
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+
+    if (phone.length !== 10 || !/^(05|06|07)[0-9]{8}$/.test(phone)) {
+        alert('❌ يرجى إدخال رقم هاتف صحيح مكوّن من 10 أرقام يبدأ بـ 05 أو 06 أو 07.');
+        phoneInput?.focus();
+        return;
     }
 
-    // 3. تحديث قائمة البلديات فور اختيار الولاية
-    function onCartWilayaChange(wilaya) {
-        const cSelect = document.getElementById('checkout-commune');
-        if (!cSelect) return;
+    const wilaya = document.getElementById('checkout-wilaya')?.value;
+    const commune = document.getElementById('checkout-commune')?.value;
 
-        cSelect.innerHTML = '<option value="" disabled selected>— Choisir la Commune —</option>';
-        if (wilaya && typeof ZIMOU_COMMUNES !== 'undefined' && ZIMOU_COMMUNES[wilaya]) {
-            ZIMOU_COMMUNES[wilaya].forEach(commune => {
-                cSelect.innerHTML += `<option value="${commune}">${commune}</option>`;
-            });
-            cSelect.disabled = false;
-        } else {
-            cSelect.disabled = true;
-        }
-        calculateCartTotals();
+    if (!wilaya || !commune) {
+        alert('❌ يرجى اختيار الولاية والبلدية من القائمة.');
+        return;
     }
 
-    // 4. احتساب المجموع ورسوم التوصيل بدقة
-    function calculateCartTotals() {
-        const wilaya = document.getElementById('checkout-wilaya')?.value;
-        const delType = document.getElementById('checkout-delivery-type')?.value || 'domicile';
-        
-        let shippingFee = 0;
-        if (wilaya && typeof ZIMOU_PRICES !== 'undefined' && ZIMOU_PRICES[wilaya]) {
-            shippingFee = ZIMOU_PRICES[wilaya];
-            // تخفيض 200 دج في حال الاستلام من المكتب
-            if (delType === 'stopdesk') {
-                shippingFee = Math.max(300, shippingFee - 200);
-            }
-        }
+    let cart = [];
+    try { 
+        cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; 
+    } catch(e) { cart = []; }
 
-        let cart = [];
-        try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) {}
-        const subtotal = cart.reduce((sum, item) => sum + ((parseFloat(item.price) || 0) * (item.quantity || item.qty || 1)), 0);
-        const finalTotal = subtotal + shippingFee;
-
-        const subtotalEl = document.getElementById('cart-total-price-page');
-        const feeEl = document.getElementById('delivery-fee-display');
-        const totalEl = document.getElementById('final-total-price');
-
-        if (subtotalEl) subtotalEl.textContent = subtotal.toLocaleString('fr-DZ');
-        if (feeEl) feeEl.textContent = shippingFee.toLocaleString('fr-DZ');
-        if (totalEl) totalEl.textContent = finalTotal.toLocaleString('fr-DZ');
-
-        return { subtotal, shippingFee, finalTotal };
+    if (!cart.length) {
+        alert('السلة فارغة!');
+        return;
     }
 
-    // 5. تأكيد الطلب مع التحقق الصارم من 10 أرقام للهاتف
-    async function handleCartCheckout(e) {
-        e.preventDefault();
+    const lName = document.getElementById('checkout-last-name').value.trim();
+    const fName = document.getElementById('checkout-first-name').value.trim();
+    const delType = document.getElementById('checkout-delivery-type').value;
+    const address = document.getElementById('checkout-address').value.trim();
+    const { shippingFee, finalTotal } = calculateCartTotals();
 
-        const phone = document.getElementById('checkout-phone').value.trim();
+    const submitBtn = document.getElementById('checkout-submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours...';
+    }
 
-        // فحص رقم الهاتف: 10 أرقام وتبدأ بـ 05 أو 06 أو 07
-        const phoneRegex = /^(05|06|07)[0-9]{8}$/;
-        if (!phoneRegex.test(phone)) {
-            alert('❌ رقم الهاتف غير صحيح! يجب أن يتكون من 10 أرقام بالضبط ويبدأ بـ 05 أو 06 أو 07.');
-            document.getElementById('checkout-phone').focus();
-            return;
-        }
+    const orderPayload = {
+        first_name: fName,
+        last_name: lName,
+        customer_name: `${lName} ${fName}`,
+        customer_phone: phone,
+        wilaya_id: wilaya,
+        commune: commune,
+        customer_address: address,
+        delivery_type: delType,
+        delivery_fee: shippingFee,
+        total_price: finalTotal,
+        items: cart,
+        status: 'Pending'
+    };
 
-        const lName = document.getElementById('checkout-last-name').value.trim();
-        const fName = document.getElementById('checkout-first-name').value.trim();
-        const delType = document.getElementById('checkout-delivery-type').value;
-        const wilaya = document.getElementById('checkout-wilaya').value;
-        const commune = document.getElementById('checkout-commune').value;
-        const address = document.getElementById('checkout-address').value.trim();
+    try {
+        const client = (typeof db !== 'undefined') ? db : ((typeof supabaseClient !== 'undefined') ? supabaseClient : supabase);
+        const { error } = await client.from('orders').insert([orderPayload]);
 
-        if (!wilaya || !commune) {
-            alert('يرجى اختيار الولاية والبلدية.');
-            return;
-        }
+        if (error) throw error;
 
-        let cart = [];
-        try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) {}
-        if (!cart.length) {
-            alert('Votre panier est vide !');
-            return;
-        }
-
-        const { shippingFee, finalTotal } = calculateCartTotals();
-        const submitBtn = document.getElementById('checkout-submit-btn');
+        localStorage.removeItem('icosium_cart');
+        const modal = document.getElementById('order-success-modal');
+        if (modal) modal.style.display = 'flex';
+    } catch (err) {
+        console.error("Order error:", err);
+        alert("حدث خطأ أثناء حفظ الطلب، يرجى المحاولة ثانية.");
         if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
-        }
-
-        const orderPayload = {
-            first_name: fName,
-            last_name: lName,
-            customer_name: `${lName} ${fName}`,
-            customer_phone: phone,
-            wilaya_id: wilaya,
-            commune: commune,
-            customer_address: address,
-            delivery_type: delType,
-            delivery_fee: shippingFee,
-            total_price: finalTotal,
-            items: cart,
-            status: 'Pending'
-        };
-
-        try {
-            const client = (typeof db !== 'undefined') ? db : ((typeof supabaseClient !== 'undefined') ? supabaseClient : supabase);
-            const { error } = await client.from('orders').insert([orderPayload]);
-
-            if (error) throw error;
-
-            localStorage.removeItem('icosium_cart');
-            const successModal = document.getElementById('order-success-modal');
-            if (successModal) successModal.style.display = 'flex';
-        } catch (err) {
-            console.error('Erreur commande:', err);
-            alert("Une erreur s'est produite lors de l'enregistrement de votre commande.");
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-shield-halved"></i> Confirmer la commande';
-            }
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-shield-halved"></i> Confirmer la commande';
         }
     }
-    </script>
+}
+
+// تهيئة العناصر فور اكتمال تحميل الصفحة
+window.addEventListener('load', () => {
+    populateWilayas();
+    calculateCartTotals();
+});
+</script>
 </body>
 </html>
