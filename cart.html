@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="images/logo3.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- استدعاء بيانات الولايات والبلديات والأسعار لشركة Zimou Express -->
+    <script src="zimou_data.js"></script>
 </head>
 <body> 
    <header class="main-header">
@@ -46,76 +48,112 @@
             </div>
 
             <div class="cart-form-section">
-             <div class="cart-summary-box">
-    <div class="checkout-box-header">
-        <i class="fas fa-truck-fast"></i>
-        <h3 data-key="checkout_delivery_details">Détails de livraison</h3>
-    </div>
-    
-    <form id="checkout-form-page">
-        <div class="checkout-field">
-            <label for="checkout-name" data-key="form_name">Nom Complet</label>
-            <div class="input-wrapper">
-                <i class="fas fa-user"></i>
-                <input type="text" id="checkout-name" required placeholder="Votre nom et prénom">
-            </div>
-        </div>
+                <div class="cart-summary-box">
+                    <div class="checkout-box-header">
+                        <i class="fas fa-truck-fast"></i>
+                        <h3 data-key="checkout_delivery_details">Détails de livraison</h3>
+                    </div>
+                    
+                    <form id="checkout-form-page" onsubmit="handleCartCheckout(event)">
+                        <!-- اللقب والاسم منفصلان حسب ملف إكسل التوصيل -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="checkout-field">
+                                <label for="checkout-last-name">Nom (اللقب) *</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="checkout-last-name" required placeholder="Nom">
+                                </div>
+                            </div>
 
-        <div class="checkout-field">
-            <label for="checkout-phone" data-key="form_phone">Numéro de Téléphone</label>
-            <div class="input-wrapper">
-                <i class="fas fa-phone"></i>
-                <input type="tel" id="checkout-phone" required placeholder="05 / 06 / 07...">
-            </div>
-        </div>
+                            <div class="checkout-field">
+                                <label for="checkout-first-name">Prénom (الاسم) *</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="checkout-first-name" required placeholder="Prénom">
+                                </div>
+                            </div>
+                        </div>
 
-        <div class="checkout-field">
-            <label for="checkout-wilaya" data-key="form_wilaya">Wilaya de livraison</label>
-            <div class="input-wrapper">
-                <i class="fas fa-map-location-dot"></i>
-                <select id="checkout-wilaya" required>
-                    <option value="" disabled selected data-key="select_wilaya">Choisir Wilaya</option>
-                </select>
-            </div>
-        </div>
+                        <div class="checkout-field">
+                            <label for="checkout-phone" data-key="form_phone">Numéro de Téléphone *</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-phone"></i>
+                                <input type="tel" id="checkout-phone" required placeholder="05 / 06 / 07...">
+                            </div>
+                        </div>
 
-        <div class="checkout-field">
-            <label for="checkout-address" data-key="form_address">Adresse de livraison (Commune / Quartier)</label>
-            <div class="input-wrapper">
-                <i class="fas fa-location-dot"></i>
-                <input type="text" id="checkout-address" required placeholder="Ex: Bab Ezzouar, Cité...">
-            </div>
-        </div>
+                        <!-- نوع التوصيل المعتمد لـ Zimou Express -->
+                        <div class="checkout-field">
+                            <label for="checkout-delivery-type">Type de livraison (طريقة التوصيل) *</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-box"></i>
+                                <select id="checkout-delivery-type" required onchange="calculateCartTotals()">
+                                    <option value="domicile" selected>À domicile (توصيل للمنزل)</option>
+                                    <option value="stopdesk">Stopdesk (استلام من مكتب الشركة)</option>
+                                </select>
+                            </div>
+                        </div>
 
-        <div class="checkout-divider"></div>
+                        <!-- الولاية -->
+                        <div class="checkout-field">
+                            <label for="checkout-wilaya" data-key="form_wilaya">Wilaya de livraison *</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-map-location-dot"></i>
+                                <select id="checkout-wilaya" required onchange="onCartWilayaChange(this.value)">
+                                    <option value="" disabled selected data-key="select_wilaya">Choisir Wilaya</option>
+                                </select>
+                            </div>
+                        </div>
 
-        <!-- ملخص الأسعار -->
-        <div class="checkout-pricing">
-            <div class="price-line">
-                <span data-key="cart_subtotal">Sous-total</span>
-                <span><strong id="cart-total-price-page">0</strong> DZD</span>
-            </div>
-            <div class="price-line">
-                <span data-key="delivery_fee">Frais de livraison</span>
-                <span><strong id="delivery-fee-display">0</strong> DZD</span>
-            </div>
-            <div class="price-line total-highlight">
-                <span data-key="cart_final_total">Total Final</span>
-                <span class="total-amount"><span id="final-total-price">0</span> DZD</span>
-            </div>
-        </div>
+                        <!-- البلدية (تعتمد على ولايات communes.xlsx) -->
+                        <div class="checkout-field">
+                            <label for="checkout-commune">Commune (البلدية) *</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-city"></i>
+                                <select id="checkout-commune" required>
+                                    <option value="" disabled selected>Choisir d'abord une Wilaya</option>
+                                </select>
+                            </div>
+                        </div>
 
-        <!-- زر التأكيد -->
-        <button type="submit" id="checkout-submit-btn" class="btn-confirm-order">
-            <i class="fas fa-shield-halved"></i>
-            <span data-key="form_confirm">Confirmer la commande</span>
-        </button>
+                        <!-- العنوان الدقيق -->
+                        <div class="checkout-field">
+                            <label for="checkout-address" data-key="form_address">Adresse complète (العنوان) *</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-location-dot"></i>
+                                <input type="text" id="checkout-address" required placeholder="Cité, Rue, N° de porte...">
+                            </div>
+                        </div>
 
-        <p class="cod-hint">
-            <i class="fas fa-hand-holding-dollar"></i> Paiement en espèces à la livraison
-        </p>
-    </form>
-</div>
+                        <div class="checkout-divider"></div>
+
+                        <!-- ملخص الأسعار المحدث ديناميكياً -->
+                        <div class="checkout-pricing">
+                            <div class="price-line">
+                                <span data-key="cart_subtotal">Sous-total</span>
+                                <span><strong id="cart-total-price-page">0</strong> DZD</span>
+                            </div>
+                            <div class="price-line">
+                                <span data-key="delivery_fee">Frais de livraison</span>
+                                <span><strong id="delivery-fee-display">0</strong> DZD</span>
+                            </div>
+                            <div class="price-line total-highlight">
+                                <span data-key="cart_final_total">Total Final</span>
+                                <span class="total-amount"><span id="final-total-price">0</span> DZD</span>
+                            </div>
+                        </div>
+
+                        <!-- زر التأكيد -->
+                        <button type="submit" id="checkout-submit-btn" class="btn-confirm-order">
+                            <i class="fas fa-shield-halved"></i>
+                            <span data-key="form_confirm">Confirmer la commande</span>
+                        </button>
+
+                        <p class="cod-hint">
+                            <i class="fas fa-hand-holding-dollar"></i> Paiement en espèces à la livraison
+                        </p>
+                    </form>
+                </div>
             </div>
 
         </div>
@@ -126,28 +164,158 @@
             <p>&copy; 2026 <strong>ICOSIUM STORE</strong>. <span data-key="footer_rights">Tous droits réservés.</span></p>
         </div>
     </footer>
-<!-- نافذة عرض الصورة المكبرة عند النقر -->
+
+    <!-- نافذة عرض الصورة المكبرة عند النقر -->
     <div id="image-lightbox-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
         <div style="position: relative; max-width: 90%; max-height: 85vh; text-align: center;">
             <span class="close-btn" onclick="closeImageLightbox()" style="position: absolute; top: -35px; right: -5px; color: #fff; font-size: 32px; cursor: pointer;">&times;</span>
             <img id="lightbox-img" src="" alt="Aperçu" style="max-width: 100%; max-height: 80vh; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); object-fit: contain;">
         </div>
     </div>
+
+    <!-- نافذة تأكيد واستلام الطلب -->
+    <div id="order-success-modal" class="modal" style="display:none; align-items:center; justify-content:center; z-index: 3000;">
+        <div class="modal-content" style="max-width: 460px; text-align: center; padding: 35px 25px; border-radius: 20px;">
+            <div style="width: 70px; height: 70px; background: rgba(0, 200, 150, 0.15); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2 id="success-title" style="font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 12px;">Commande Confirmée !</h2>
+            <p id="success-msg" style="color: var(--color-text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px;">Merci pour votre confiance. Nous vous contacterons par téléphone pour valider l'expédition.</p>
+            
+            <button type="button" id="btn-success-home" class="btn-confirm-order" style="margin: 0 auto; max-width: 220px;" onclick="window.location.href='index.html'">
+                <i class="fas fa-arrow-left"></i> <span>Retour à l'accueil</span>
+            </button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
-    <!-- نافذة تأكيد واستلام الطلب -->
-<div id="order-success-modal" class="modal" style="display:none; align-items:center; justify-content:center; z-index: 3000;">
-    <div class="modal-content" style="max-width: 460px; text-align: center; padding: 35px 25px; border-radius: 20px;">
-        <div style="width: 70px; height: 70px; background: rgba(0, 200, 150, 0.15); color: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
-            <i class="fas fa-check"></i>
-        </div>
-        <h2 id="success-title" style="font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 12px;"></h2>
-        <p id="success-msg" style="color: var(--color-text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px;"></p>
+
+    <!-- سكربت الربط الحسابي وملء القوائم المعتمد على Zimou Express -->
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        initCartWilayas();
+        calculateCartTotals();
+    });
+
+    // 1. تعبئة الولايات من بيانات Zimou
+    function initCartWilayas() {
+        const wSelect = document.getElementById('checkout-wilaya');
+        if (!wSelect || typeof ZIMOU_PRICES === 'undefined') return;
+
+        let options = '<option value="" disabled selected>Choisir Wilaya</option>';
+        Object.keys(ZIMOU_PRICES).forEach(w => {
+            options += `<option value="${w}">${w}</option>`;
+        });
+        wSelect.innerHTML = options;
+    }
+
+    // 2. تحديث قائمة البلديات عند اختيار ولاية معينة
+    function onCartWilayaChange(wilaya) {
+        const cSelect = document.getElementById('checkout-commune');
+        if (!cSelect) return;
+
+        cSelect.innerHTML = '<option value="" disabled selected>Choisir Commune</option>';
+        if (wilaya && typeof ZIMOU_COMMUNES !== 'undefined' && ZIMOU_COMMUNES[wilaya]) {
+            ZIMOU_COMMUNES[wilaya].forEach(commune => {
+                cSelect.innerHTML += `<option value="${commune}">${commune}</option>`;
+            });
+        }
+        calculateCartTotals();
+    }
+
+    // 3. حساب سعر التوصيل والمجموع النهائي
+    function calculateCartTotals() {
+        const wilaya = document.getElementById('checkout-wilaya')?.value;
+        const delType = document.getElementById('checkout-delivery-type')?.value || 'domicile';
         
-        <button type="button" id="btn-success-home" class="btn-confirm-order" style="margin: 0 auto; max-width: 220px;" onclick="window.location.href='index.html'">
-            <i class="fas fa-arrow-left"></i> <span id="success-btn-text"></span>
-        </button>
-    </div>
-</div>
+        let shippingFee = 0;
+        if (wilaya && typeof ZIMOU_PRICES !== 'undefined' && ZIMOU_PRICES[wilaya]) {
+            shippingFee = ZIMOU_PRICES[wilaya];
+            // تخفيض 200 دج في حال الاستلام من المكتب
+            if (delType === 'stopdesk') {
+                shippingFee = Math.max(300, shippingFee - 200);
+            }
+        }
+
+        // جلب مجموع سلة المشتريات من localStorage
+        let cart = [];
+        try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) {}
+        const subtotal = cart.reduce((sum, item) => sum + ((parseFloat(item.price) || 0) * (item.quantity || item.qty || 1)), 0);
+        const finalTotal = subtotal + shippingFee;
+
+        const subtotalEl = document.getElementById('cart-total-price-page');
+        const feeEl = document.getElementById('delivery-fee-display');
+        const totalEl = document.getElementById('final-total-price');
+
+        if (subtotalEl) subtotalEl.textContent = subtotal.toLocaleString('fr-DZ');
+        if (feeEl) feeEl.textContent = shippingFee.toLocaleString('fr-DZ');
+        if (totalEl) totalEl.textContent = finalTotal.toLocaleString('fr-DZ');
+
+        return { subtotal, shippingFee, finalTotal };
+    }
+
+    // 4. إرسال الطلب وحفظ جميع الحقول المطابقة لملف إكسل
+    async function handleCartCheckout(e) {
+        e.preventDefault();
+
+        const lName = document.getElementById('checkout-last-name').value.trim();
+        const fName = document.getElementById('checkout-first-name').value.trim();
+        const phone = document.getElementById('checkout-phone').value.trim();
+        const delType = document.getElementById('checkout-delivery-type').value;
+        const wilaya = document.getElementById('checkout-wilaya').value;
+        const commune = document.getElementById('checkout-commune').value;
+        const address = document.getElementById('checkout-address').value.trim();
+
+        let cart = [];
+        try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) {}
+        if (!cart.length) {
+            alert('Votre panier est vide !');
+            return;
+        }
+
+        const { shippingFee, finalTotal } = calculateCartTotals();
+        const submitBtn = document.getElementById('checkout-submit-btn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
+        }
+
+        const orderPayload = {
+            first_name: fName,
+            last_name: lName,
+            customer_name: `${lName} ${fName}`,
+            customer_phone: phone,
+            wilaya_id: wilaya,
+            commune: commune,
+            customer_address: address,
+            delivery_type: delType,
+            delivery_fee: shippingFee,
+            total_price: finalTotal,
+            items: cart,
+            status: 'Pending'
+        };
+
+        try {
+            // استخدام عميل Supabase المعرف في المتجر
+            const client = (typeof db !== 'undefined') ? db : ((typeof supabaseClient !== 'undefined') ? supabaseClient : supabase);
+            const { error } = await client.from('orders').insert([orderPayload]);
+
+            if (error) throw error;
+
+            // تفريغ السلة وعرض رسالة النجاح
+            localStorage.removeItem('icosium_cart');
+            const successModal = document.getElementById('order-success-modal');
+            if (successModal) successModal.style.display = 'flex';
+        } catch (err) {
+            console.error('Erreur commande:', err);
+            alert("Une erreur s'est produite lors de l'enregistrement de votre commande.");
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-shield-halved"></i> Confirmer la commande';
+            }
+        }
+    }
+    </script>
 </body>
 </html>
