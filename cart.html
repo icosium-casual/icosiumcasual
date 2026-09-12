@@ -7,8 +7,6 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="images/logo3.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <!-- استدعاء بيانات الولايات والبلديات والأسعار لشركة Zimou Express -->
-    <script src="zimou_data.js"></script>
 </head>
 <body> 
    <header class="main-header">
@@ -55,13 +53,13 @@
                     </div>
                     
                     <form id="checkout-form-page" onsubmit="handleCartCheckout(event)">
-                        <!-- اللقب والاسم منفصلان حسب ملف إكسل التوصيل -->
+                        <!-- اللقب والاسم -->
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                             <div class="checkout-field">
                                 <label for="checkout-last-name">Nom (اللقب) *</label>
                                 <div class="input-wrapper">
                                     <i class="fas fa-user"></i>
-                                    <input type="text" id="checkout-last-name" required placeholder="Nom">
+                                    <input type="text" id="checkout-last-name" required placeholder="Ex: Benali">
                                 </div>
                             </div>
 
@@ -69,27 +67,29 @@
                                 <label for="checkout-first-name">Prénom (الاسم) *</label>
                                 <div class="input-wrapper">
                                     <i class="fas fa-user"></i>
-                                    <input type="text" id="checkout-first-name" required placeholder="Prénom">
+                                    <input type="text" id="checkout-first-name" required placeholder="Ex: Mohamed">
                                 </div>
                             </div>
                         </div>
 
+                        <!-- رقم الهاتف مع التحقق من 10 أرقام ومنع الزيادة -->
                         <div class="checkout-field">
-                            <label for="checkout-phone" data-key="form_phone">Numéro de Téléphone *</label>
+                            <label for="checkout-phone" data-key="form_phone">Numéro de Téléphone (10 chiffres) *</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-phone"></i>
-                                <input type="tel" id="checkout-phone" required placeholder="05 / 06 / 07...">
+                                <input type="tel" id="checkout-phone" required placeholder="05XXXXXXXX / 06... / 07..." maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, ''); validatePhoneRealtime(this);">
                             </div>
+                            <small id="phone-error-msg" style="color:#f87171; font-size:0.75rem; display:none; margin-top:4px;">Le numéro doit contenir exactement 10 chiffres (ex: 0555000000).</small>
                         </div>
 
-                        <!-- نوع التوصيل المعتمد لـ Zimou Express -->
+                        <!-- نوع التوصيل -->
                         <div class="checkout-field">
-                            <label for="checkout-delivery-type">Type de livraison (طريقة التوصيل) *</label>
+                            <label for="checkout-delivery-type">Type de livraison (طريقة الشحن) *</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-box"></i>
                                 <select id="checkout-delivery-type" required onchange="calculateCartTotals()">
-                                    <option value="domicile" selected>À domicile (توصيل للمنزل)</option>
-                                    <option value="stopdesk">Stopdesk (استلام من مكتب الشركة)</option>
+                                    <option value="domicile" selected>À domicile (توصيل إلى باب المنزل)</option>
+                                    <option value="stopdesk">Stopdesk (استلام من مكتب Zimou Express)</option>
                                 </select>
                             </div>
                         </div>
@@ -100,34 +100,34 @@
                             <div class="input-wrapper">
                                 <i class="fas fa-map-location-dot"></i>
                                 <select id="checkout-wilaya" required onchange="onCartWilayaChange(this.value)">
-                                    <option value="" disabled selected data-key="select_wilaya">Choisir Wilaya</option>
+                                    <option value="" disabled selected>— Choisir la Wilaya —</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- البلدية (تعتمد على ولايات communes.xlsx) -->
+                        <!-- البلدية -->
                         <div class="checkout-field">
                             <label for="checkout-commune">Commune (البلدية) *</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-city"></i>
                                 <select id="checkout-commune" required>
-                                    <option value="" disabled selected>Choisir d'abord une Wilaya</option>
+                                    <option value="" disabled selected>— Sélectionnez d'abord une wilaya —</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- العنوان الدقيق -->
+                        <!-- العنوان الكامل -->
                         <div class="checkout-field">
-                            <label for="checkout-address" data-key="form_address">Adresse complète (العنوان) *</label>
+                            <label for="checkout-address" data-key="form_address">Adresse exacte (العنوان بالتفصيل) *</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-location-dot"></i>
-                                <input type="text" id="checkout-address" required placeholder="Cité, Rue, N° de porte...">
+                                <input type="text" id="checkout-address" required placeholder="Cité, N° de rue, Bâtiment...">
                             </div>
                         </div>
 
                         <div class="checkout-divider"></div>
 
-                        <!-- ملخص الأسعار المحدث ديناميكياً -->
+                        <!-- ملخص الحساب -->
                         <div class="checkout-pricing">
                             <div class="price-line">
                                 <span data-key="cart_subtotal">Sous-total</span>
@@ -143,14 +143,13 @@
                             </div>
                         </div>
 
-                        <!-- زر التأكيد -->
                         <button type="submit" id="checkout-submit-btn" class="btn-confirm-order">
                             <i class="fas fa-shield-halved"></i>
                             <span data-key="form_confirm">Confirmer la commande</span>
                         </button>
 
                         <p class="cod-hint">
-                            <i class="fas fa-hand-holding-dollar"></i> Paiement en espèces à la livraison
+                            <i class="fas fa-hand-holding-dollar"></i> Paiement en espèces à la livraison (COD)
                         </p>
                     </form>
                 </div>
@@ -165,14 +164,6 @@
         </div>
     </footer>
 
-    <!-- نافذة عرض الصورة المكبرة عند النقر -->
-    <div id="image-lightbox-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
-        <div style="position: relative; max-width: 90%; max-height: 85vh; text-align: center;">
-            <span class="close-btn" onclick="closeImageLightbox()" style="position: absolute; top: -35px; right: -5px; color: #fff; font-size: 32px; cursor: pointer;">&times;</span>
-            <img id="lightbox-img" src="" alt="Aperçu" style="max-width: 100%; max-height: 80vh; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); object-fit: contain;">
-        </div>
-    </div>
-
     <!-- نافذة تأكيد واستلام الطلب -->
     <div id="order-success-modal" class="modal" style="display:none; align-items:center; justify-content:center; z-index: 3000;">
         <div class="modal-content" style="max-width: 460px; text-align: center; padding: 35px 25px; border-radius: 20px;">
@@ -180,7 +171,7 @@
                 <i class="fas fa-check"></i>
             </div>
             <h2 id="success-title" style="font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 12px;">Commande Confirmée !</h2>
-            <p id="success-msg" style="color: var(--color-text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px;">Merci pour votre confiance. Nous vous contacterons par téléphone pour valider l'expédition.</p>
+            <p id="success-msg" style="color: var(--color-text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px;">Merci pour votre confiance. Votre commande est enregistrée avec succès.</p>
             
             <button type="button" id="btn-success-home" class="btn-confirm-order" style="margin: 0 auto; max-width: 220px;" onclick="window.location.href='index.html'">
                 <i class="fas fa-arrow-left"></i> <span>Retour à l'accueil</span>
@@ -188,43 +179,62 @@
         </div>
     </div>
 
+    <!-- استدعاء ملف البيانات المولد (Zimou Express) + Supabase -->
+    <script src="zimou_data.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 
-    <!-- سكربت الربط الحسابي وملء القوائم المعتمد على Zimou Express -->
     <script>
+    // 1. التحقق المباشر أثناء كتابة رقم الهاتف
+    function validatePhoneRealtime(input) {
+        const errorEl = document.getElementById('phone-error-msg');
+        const val = input.value.trim();
+        if (val.length > 0 && (val.length !== 10 || !/^(05|06|07)/.test(val))) {
+            errorEl.style.display = 'block';
+            input.style.borderColor = '#f87171';
+        } else {
+            errorEl.style.display = 'none';
+            input.style.borderColor = '';
+        }
+    }
+
+    // 2. تهيئة وتعبئة الولايات
     document.addEventListener('DOMContentLoaded', () => {
         initCartWilayas();
         calculateCartTotals();
     });
 
-    // 1. تعبئة الولايات من بيانات Zimou
     function initCartWilayas() {
         const wSelect = document.getElementById('checkout-wilaya');
-        if (!wSelect || typeof ZIMOU_PRICES === 'undefined') return;
+        if (!wSelect) return;
 
-        let options = '<option value="" disabled selected>Choisir Wilaya</option>';
-        Object.keys(ZIMOU_PRICES).forEach(w => {
-            options += `<option value="${w}">${w}</option>`;
-        });
-        wSelect.innerHTML = options;
+        if (typeof ZIMOU_PRICES !== 'undefined') {
+            let options = '<option value="" disabled selected>— Choisir la Wilaya —</option>';
+            Object.keys(ZIMOU_PRICES).forEach(w => {
+                options += `<option value="${w}">${w}</option>`;
+            });
+            wSelect.innerHTML = options;
+        }
     }
 
-    // 2. تحديث قائمة البلديات عند اختيار ولاية معينة
+    // 3. تحديث قائمة البلديات فور اختيار الولاية
     function onCartWilayaChange(wilaya) {
         const cSelect = document.getElementById('checkout-commune');
         if (!cSelect) return;
 
-        cSelect.innerHTML = '<option value="" disabled selected>Choisir Commune</option>';
+        cSelect.innerHTML = '<option value="" disabled selected>— Choisir la Commune —</option>';
         if (wilaya && typeof ZIMOU_COMMUNES !== 'undefined' && ZIMOU_COMMUNES[wilaya]) {
             ZIMOU_COMMUNES[wilaya].forEach(commune => {
                 cSelect.innerHTML += `<option value="${commune}">${commune}</option>`;
             });
+            cSelect.disabled = false;
+        } else {
+            cSelect.disabled = true;
         }
         calculateCartTotals();
     }
 
-    // 3. حساب سعر التوصيل والمجموع النهائي
+    // 4. احتساب المجموع ورسوم التوصيل بدقة
     function calculateCartTotals() {
         const wilaya = document.getElementById('checkout-wilaya')?.value;
         const delType = document.getElementById('checkout-delivery-type')?.value || 'domicile';
@@ -238,7 +248,6 @@
             }
         }
 
-        // جلب مجموع سلة المشتريات من localStorage
         let cart = [];
         try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) {}
         const subtotal = cart.reduce((sum, item) => sum + ((parseFloat(item.price) || 0) * (item.quantity || item.qty || 1)), 0);
@@ -255,17 +264,31 @@
         return { subtotal, shippingFee, finalTotal };
     }
 
-    // 4. إرسال الطلب وحفظ جميع الحقول المطابقة لملف إكسل
+    // 5. تأكيد الطلب مع التحقق الصارم من 10 أرقام للهاتف
     async function handleCartCheckout(e) {
         e.preventDefault();
 
+        const phone = document.getElementById('checkout-phone').value.trim();
+
+        // فحص رقم الهاتف: 10 أرقام وتبدأ بـ 05 أو 06 أو 07
+        const phoneRegex = /^(05|06|07)[0-9]{8}$/;
+        if (!phoneRegex.test(phone)) {
+            alert('❌ رقم الهاتف غير صحيح! يجب أن يتكون من 10 أرقام بالضبط ويبدأ بـ 05 أو 06 أو 07.');
+            document.getElementById('checkout-phone').focus();
+            return;
+        }
+
         const lName = document.getElementById('checkout-last-name').value.trim();
         const fName = document.getElementById('checkout-first-name').value.trim();
-        const phone = document.getElementById('checkout-phone').value.trim();
         const delType = document.getElementById('checkout-delivery-type').value;
         const wilaya = document.getElementById('checkout-wilaya').value;
         const commune = document.getElementById('checkout-commune').value;
         const address = document.getElementById('checkout-address').value.trim();
+
+        if (!wilaya || !commune) {
+            alert('يرجى اختيار الولاية والبلدية.');
+            return;
+        }
 
         let cart = [];
         try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) {}
@@ -297,13 +320,11 @@
         };
 
         try {
-            // استخدام عميل Supabase المعرف في المتجر
             const client = (typeof db !== 'undefined') ? db : ((typeof supabaseClient !== 'undefined') ? supabaseClient : supabase);
             const { error } = await client.from('orders').insert([orderPayload]);
 
             if (error) throw error;
 
-            // تفريغ السلة وعرض رسالة النجاح
             localStorage.removeItem('icosium_cart');
             const successModal = document.getElementById('order-success-modal');
             if (successModal) successModal.style.display = 'flex';
