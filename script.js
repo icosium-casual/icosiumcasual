@@ -700,7 +700,7 @@ function populateWilayas() {
         const fee = parseFloat(e.target.value) || 0;
         const feeDisplay = document.getElementById('delivery-fee-display');
         if (feeDisplay) feeDisplay.textContent = fee;
-        calcFinalTotalPage();
+     
     });
 }
 
@@ -779,7 +779,7 @@ function renderCartPage() {
     }
 
     if (totalEl) totalEl.textContent = subtotal;
-    calcFinalTotalPage();
+  
 }
 
 function calcFinalTotalPage() {
@@ -843,7 +843,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCartFromStorage();
 
     if (window.location.pathname.includes('cart.html')) {
-        populateWilayas();
+    
         renderCartPage();
 
         const form = document.getElementById('checkout-form-page');
