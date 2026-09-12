@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="icon" href="images/logo3.png">
 <link rel="apple-touch-icon" href="images/logo3.png">
 <title>ICOSIUM OS — Admin</title>
@@ -1538,8 +1539,7 @@ a { text-decoration: none; }
           <div class="ml-auto" style="display:flex;gap:8px;align-items:center">
             <div class="search-wrap"><i class="fas fa-search"></i><input type="text" placeholder="Chercher client, #ID..." oninput="searchOrders(this.value)"></div>
             <button class="print-btn" onclick="printSection('orders')"><i class="fas fa-print"></i> Imprimer</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportOrdersCSV()"><i class="fas fa-file-csv"></i> Export CSV</button>
-          </div>
+<button class="btn btn-ghost btn-sm" onclick="exportOrdersExcel()"><i class="fas fa-file-excel" style="color:#10b981"></i> Export Excel</button>          </div>
         </div>
         <div class="card" id="orders-print-area">
           <div class="tbl-wrap">
@@ -3245,11 +3245,99 @@ function printSection(section) {
 function printChart(canvasId) { window.print(); }
 function printOrderDetail() { window.print(); }
 
-function exportOrdersCSV() {
-  const headers = ['ID', 'Client', 'Téléphone', 'Total', 'Livraison', 'Statut', 'Date'];
-  const rows = allOrders.map(o => [o.id, o.customer_name, o.customer_phone, o.total_price, o.delivery_fee || 0, o.status, fmtDate(o.created_at)]);
-  downloadCSV([headers, ...rows], 'commandes_icosium.csv');
-  logAudit('system', 'Export CSV commandes', 'system');
+/* ─── EXCEL EXPORT (ZIMOU / ZR FORMAT) ─── */
+function exportOrdersExcel() {
+  // 1. تصفية الطلبيات وفق الفلتر المحدد حالياً في الواجهة
+  let targetOrders = (currentOrderFilter === 'all') 
+    ? allOrders 
+    : allOrders.filter(o => o.status === currentOrderFilter);
+
+  if (!targetOrders.length) {
+    toast(`Aucune commande avec le filtre "${currentOrderFilter}" !`, 'err');
+    return;
+  }
+
+  // خريطة أسماء الولايات
+  const wilayaMap = Object.fromEntries(allWilayas.map(w => [w.id, w.name]));
+
+  // 2. تجهيز البيانات بمطابقة أعمدة ملف ecommerce-importation.xlsx
+  const rows = targetOrders.map(o => {
+    // فصل الاسم واللقب
+    const fullName = (o.customer_name || '').trim();
+    const nameParts = fullName.split(' ');
+    const firstName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : fullName;
+    const lastName = nameParts[0] || fullName;
+
+    // استخراج البلدية والعنوان
+    const rawAddr = o.customer_address || '';
+    let commune = '';
+    let address = rawAddr;
+    if (rawAddr.includes('-')) {
+      const parts = rawAddr.split('-');
+      commune = parts[0].trim();
+      address = parts.slice(1).join('-').trim() || commune;
+    } else {
+      commune = rawAddr;
+    }
+
+    // اسم الولاية
+    const wilayaName = wilayaMap[o.wilaya_id] || (o.wilaya_id ? String(o.wilaya_id) : '');
+
+    // وصف وتلخيص المنتجات والمقاسات
+    let productSummary = 'ICOSIUM CASUAL';
+    let items = o.items;
+    if (typeof items === 'string') {
+      try { items = JSON.parse(items); } catch(e) { items = []; }
+    }
+    if (Array.isArray(items) && items.length > 0) {
+      productSummary = items.map(i => `${i.qty || 1}x ${i.name} (${i.size || 'M'})`).join(' + ');
+    }
+
+    return {
+      'Nom*': lastName,
+      'Prénom*': firstName,
+      'Téléphone*': o.customer_phone || '',
+      'Adresse*': address,
+      'Commune*': commune,
+      'Wilaya*': wilayaName,
+      'Nº commande*': String(o.id),
+      'Produit*': productSummary,
+      'Poids*': 1,
+      'Type de livraison': 'domicile',
+      'Prix*': parseFloat(o.total_price || 0),
+      'Livraison gratuite': 'Non',
+      'Ouvrable': 'Oui',
+      'ID Bureaux ': '',
+      'Assuré le colis': 'Non',
+      'Valeur declarée': '',
+      'Username boutique': 'ICOSIUM CASUAL',
+      'Tag Suivi': '',
+      'Longeur': '',
+      'Largeur': '',
+      'Hauteur': ''
+    };
+  });
+
+  // 3. إنشاء مصنف Excel وتنزيله مباشرة
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+
+  // تنسيق عرض الأعمدة تلقائياً لسهولة القراءة
+  worksheet['!cols'] = [
+    { wch: 14 }, { wch: 14 }, { wch: 15 }, { wch: 25 },
+    { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 30 },
+    { wch: 8 },  { wch: 16 }, { wch: 10 }, { wch: 16 },
+    { wch: 10 }, { wch: 12 }, { wch: 14 }, { wch: 14 },
+    { wch: 18 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 10 }
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+  const fileName = `commandes_${currentOrderFilter}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
+
+  logAudit('system', `Export Excel des commandes (${currentOrderFilter})`, 'system');
+  toast(`Export réussi: ${targetOrders.length} commande(s) exportée(s) !`, 'ok');
 }
 
 function exportReportCSV() {
