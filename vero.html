@@ -12,6 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+   
 /* ═══════════════════════════════════════════════════════
    ICOSIUM OS — Admin | Dark + Light Mode
    Font: Cabinet Grotesk (headings) + Satoshi (body)
@@ -3268,7 +3269,6 @@ function printSection(section) {
 
 function printChart(canvasId) { window.print(); }
 function printOrderDetail() { window.print(); }
-
 function exportOrdersExcel() {
   let targetOrders = (currentOrderFilter === 'all') 
     ? allOrders 
@@ -3279,13 +3279,11 @@ function exportOrdersExcel() {
     return;
   }
 
-  // خريطة الولايات لتحويل ID إلى اسم مقروء
   const wilayaMap = (typeof ZIMOU_DATA !== 'undefined')
     ? Object.fromEntries(Object.entries(ZIMOU_DATA).map(([name, obj]) => [obj.id, name]))
     : Object.fromEntries(allWilayas.map(w => [w.id, w.name]));
 
   const rows = targetOrders.map(o => {
-    // 1. معالجة الاسم واللقب
     let lastName = o.last_name || '';
     let firstName = o.first_name || '';
     if (!lastName && o.customer_name) {
@@ -3294,7 +3292,6 @@ function exportOrdersExcel() {
       firstName = parts.slice(1).join(' ') || '';
     }
 
-    // 2. معالجة العنوان والولاية
     let wilayaName = wilayaMap[o.wilaya_id] || o.wilaya_id || '';
     let commune = o.commune || '';
     let address = o.customer_address || '';
@@ -3308,7 +3305,6 @@ function exportOrdersExcel() {
       }
     }
 
-    // 3. تلخيص المنتجات
     let itemsSummary = 'ICOSIUM CASUAL';
     let items = o.items;
     if (typeof items === 'string') {
@@ -3318,12 +3314,11 @@ function exportOrdersExcel() {
       itemsSummary = items.map(i => `${i.qty || 1}x ${i.name} (${i.size || 'M'})`).join(' + ');
     }
 
-    // 4. تصحيح المصطلحات لتتوافق مع نظام Zimou Express بدقة
-    // Zimou تستخدم "Express" للمنزل، و "Point Relais" للمكتب
     const zrTypeLivraison = (o.delivery_type === 'stopdesk' || o.delivery_type === 'Point Relais') ? 'Point Relais' : 'Express';
-    
-    // Zimou تطلب الوزن بالغرام (1000 غرام = 1 كغ)
     const zrPoids = (o.weight || 1) * 1000; 
+    
+    // حساب سعر المنتجات الصافي لشركة التوصيل
+    const netPrice = Math.max(0, parseFloat(o.total_price || 0) - parseFloat(o.delivery_fee || 0));
 
     return {
       'Nom*': lastName,
@@ -3334,9 +3329,9 @@ function exportOrdersExcel() {
       'Wilaya*': wilayaName,
       'Nº commande*': String(o.id),
       'Produit*': itemsSummary,
-      'Poids*': zrPoids, // يجب أن يكون بالغرام
-      'Type de livraison': zrTypeLivraison, // "Express" أو "Point Relais"
-      'Prix*': parseFloat(o.total_price || 0),
+      'Poids*': zrPoids,
+      'Type de livraison': zrTypeLivraison,
+      'Prix*': netPrice, // <--- السعر هنا تم تصحيحه (بدون توصيل)
       'Livraison gratuite': o.free_shipping ? 'Oui' : 'Non',
       'Ouvrable': o.is_openable !== false ? 'Oui' : 'Non',
       'ID Bureaux ': o.office_id || '',
@@ -3350,16 +3345,13 @@ function exportOrdersExcel() {
     };
   });
 
-  // إنشاء مصنف Excel وتنزيله
   const worksheet = XLSX.utils.json_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
 
   const fileName = `zimou_commandes_${currentOrderFilter}_${new Date().toISOString().slice(0, 10)}.xlsx`;
   XLSX.writeFile(workbook, fileName);
-
-  logAudit('system', `Export Excel Zimou (${currentOrderFilter})`, 'system');
-  toast(`Exportation réussie de ${targetOrders.length} commande(s) !`, 'ok');
+  toast(`Exportation réussie !`, 'ok');
 }
 function exportReportCSV() {
   const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -3598,14 +3590,12 @@ function openOrderModal(o) {
   openModal('modal-order');
 }
 
-// ─── الدالة الرئيسية بعد التحديث والدمج الكامل ───
 async function saveOrder() {
   const newStatus = document.getElementById('mod-status-sel').value;
   const livreurId = document.getElementById('mod-livreur-sel').value || null;
   const noteAdmin = document.getElementById('mod-note').value || null;
 
   try {
-    // 1. جلب الطلب الحالي للتحقق من حالته السابقة ومنتجاته
     const { data: order, error: fetchErr } = await dbFrom('orders').select('*').eq('id', currentOrderId).single();
     if (fetchErr || !order) {
       toast('Erreur lors de la récupération de la commande.', 'err');
@@ -3615,81 +3605,81 @@ async function saveOrder() {
     let trackingCode = order.tracking_number || null;
     let labelUrl = order.tracking_label_url || null;
 
-    // 2. إذا تم تغيير الحالة إلى Confirmed ولم تكن مسبقاً Confirmed
-    if (newStatus === 'Confirmed' && order.status !== 'Confirmed') {
-      
-      // أ) خصم المخزون
-      let items = order.items;
-      if (typeof items === 'string') {
-        try { items = JSON.parse(items); } catch(e) { items = []; }
-      }
+    let items = order.items;
+    if (typeof items === 'string') {
+      try { items = JSON.parse(items); } catch(e) { items = []; }
+    }
 
+    // 1. حالة التأكيد: خصم المخزون
+    if (newStatus === 'Confirmed' && order.status !== 'Confirmed') {
       if (Array.isArray(items) && items.length > 0) {
         for (const item of items) {
           const pId = item.product_id;
-          const qtyToDeduct = parseInt(item.qty, 10) || 1;
+          const qty = parseInt(item.qty || item.quantity, 10) || 1;
           if (!pId) continue;
 
-          // جلب بيانات المنتج الحالية
           const { data: prod } = await dbFrom('products').select('*').eq('id', pId).single();
           if (prod) {
-            // خصم المخزون الكلي
-            const updatedStock = Math.max(0, (parseInt(prod.stock, 10) || 0) - qtyToDeduct);
-
-            // خصم الكمية من المقاس واللون المحددين
-            let sizesArr = prod.sizes;
-            if (typeof sizesArr === 'string') {
-              try { sizesArr = JSON.parse(sizesArr); } catch(e) { sizesArr = []; }
-            }
-
+            const updatedStock = Math.max(0, (parseInt(prod.stock, 10) || 0) - qty);
+            let sizesArr = typeof prod.sizes === 'string' ? JSON.parse(prod.sizes || '[]') : (prod.sizes || []);
+            
             if (Array.isArray(sizesArr) && sizesArr.length > 0) {
               sizesArr = sizesArr.map(s => {
-                const sameSize = !item.size || s.size === item.size;
-                const sameColor = !item.color || s.color === item.color;
-                if (sameSize && sameColor) {
-                  return { ...s, qty: Math.max(0, (parseInt(s.qty, 10) || 0) - qtyToDeduct) };
+                if ((!item.size || s.size === item.size) && (!item.color || s.color === item.color)) {
+                  return { ...s, qty: Math.max(0, (parseInt(s.qty, 10) || 0) - qty) };
                 }
                 return s;
               });
             }
 
-            // حفظ التحديث في جدول المنتجات
-            await dbFrom('products').update({
-              stock: updatedStock,
-              sizes: sizesArr
-            }).eq('id', pId);
-
-            // تسجيل حركة خروج في جدول mouvements de stock
-            await dbFrom('stock_movements').insert([{
-              product_id: pId,
-              type: 'OUT',
-              quantity: qtyToDeduct,
-              reason: `Commande confirmée #${currentOrderId}`
-            }]);
+            await dbFrom('products').update({ stock: updatedStock, sizes: sizesArr }).eq('id', pId);
+            await dbFrom('stock_movements').insert([{ product_id: pId, type: 'OUT', quantity: qty, reason: `Commande #${currentOrderId} (Confirmée)` }]);
           }
         }
       }
 
-      // ب) إرسال الطرد تلقائياً إلى منصة ZR Express إذا لم يكن قد أُرسل من قبل
-      if (!trackingCode && ZR_API_TOKEN !== 'YOUR_ZR_EXPRESS_API_TOKEN_HERE') {
+      // إرسال لـ Zimou
+      if (!trackingCode && typeof ZR_API_TOKEN !== 'undefined' && ZR_API_TOKEN.trim() !== '') {
         const zrResult = await createZRColis(order);
-        if (zrResult.success) {
+        if (zrResult && zrResult.success) {
           trackingCode = zrResult.tracking;
           labelUrl = zrResult.labelUrl;
-          toast(`Colis envoyé à ZR Express ! Suivi: ${trackingCode}`, 'ok');
-        } else {
-          toast(`Avertissement ZR: ${zrResult.message}`, 'err');
+          toast(`Colis envoyé à Zimou ! Suivi: ${trackingCode}`, 'ok');
         }
       }
+    } 
+    // 2. حالة الإلغاء (Retour): إرجاع المخزون
+    else if (newStatus === 'Cancelled' && order.status === 'Confirmed') {
+      if (Array.isArray(items) && items.length > 0) {
+        for (const item of items) {
+          const pId = item.product_id;
+          const qty = parseInt(item.qty || item.quantity, 10) || 1;
+          if (!pId) continue;
+
+          const { data: prod } = await dbFrom('products').select('*').eq('id', pId).single();
+          if (prod) {
+            const updatedStock = (parseInt(prod.stock, 10) || 0) + qty; // إرجاع الكمية
+            let sizesArr = typeof prod.sizes === 'string' ? JSON.parse(prod.sizes || '[]') : (prod.sizes || []);
+            
+            if (Array.isArray(sizesArr) && sizesArr.length > 0) {
+              sizesArr = sizesArr.map(s => {
+                if ((!item.size || s.size === item.size) && (!item.color || s.color === item.color)) {
+                  return { ...s, qty: (parseInt(s.qty, 10) || 0) + qty };
+                }
+                return s;
+              });
+            }
+
+            await dbFrom('products').update({ stock: updatedStock, sizes: sizesArr }).eq('id', pId);
+            await dbFrom('stock_movements').insert([{ product_id: pId, type: 'IN', quantity: qty, reason: `Retour Commande #${currentOrderId} (Annulée)` }]);
+          }
+        }
+      }
+      toast('Stock retourné automatiquement suite à l\'annulation.', 'ok');
     }
 
-    // 3. تحديث بيانات الطلب في Supabase (مع رقم التتبع إن وجد)
-    const updatePayload = {
-      status: newStatus,
-      livreur_id: livreurId,
-      note_admin: noteAdmin
-    };
-
+    // 3. تحديث الطلب
+    const updatePayload = { status: newStatus, livreur_id: livreurId, note_admin: noteAdmin };
     if (trackingCode) {
       updatePayload.tracking_number = trackingCode;
       updatePayload.tracking_label_url = labelUrl;
@@ -3698,9 +3688,8 @@ async function saveOrder() {
     const { error: updateErr } = await dbFrom('orders').update(updatePayload).eq('id', currentOrderId);
 
     if (!updateErr) {
-      toast(newStatus === 'Confirmed' ? 'Commande confirmée, stock déduit et synchronisée !' : 'Commande mise à jour !');
-      logAudit('order', `Commande #${currentOrderId} mise à jour → ${newStatus}${trackingCode ? ` (ZR: ${trackingCode})` : ''}`, 'order');
-      addNotification('Commande mise à jour', `#${currentOrderId} → ${newStatus}`);
+      toast('Commande mise à jour avec succès !');
+      logAudit('order', `Commande #${currentOrderId} → ${newStatus}`, 'order');
       closeModal('modal-order'); 
       await loadAll();
     } else {
@@ -3708,7 +3697,7 @@ async function saveOrder() {
     }
   } catch (err) {
     console.error("Erreur saveOrder:", err);
-    toast("Une erreur est survenue lors de l'enregistrement.", 'err');
+    toast("Une erreur est survenue.", 'err');
   }
 }
    // ─── إعدادات ربط منصة ZR Express ───
