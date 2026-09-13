@@ -1539,8 +1539,11 @@ a { text-decoration: none; }
           </div>
           <div class="ml-auto" style="display:flex;gap:8px;align-items:center">
             <div class="search-wrap"><i class="fas fa-search"></i><input type="text" placeholder="Chercher client, #ID..." oninput="searchOrders(this.value)"></div>
-         <button class="btn btn-ghost btn-sm" onclick="printPreparationSlip()"><i class="fas fa-tshirt" style="color:#60a5fa"></i> Bon de Préparation</button>
-             <button class="print-btn" onclick="printSection('orders')"><i class="fas fa-print"></i> Imprimer</button>
+<!-- زر مزامنة التتبع الآلي مع Zimou Express -->
+<button class="btn btn-ghost btn-sm" id="btn-sync-zimou" onclick="syncZimouTracking(true)" title="Vérifier le statut des colis auprès de Zimou Express">
+  <i class="fas fa-sync-alt" style="color:#38bdf8;"></i> Sync Zimou
+</button>
+<button class="btn btn-ghost btn-sm" onclick="printPreparationSlip()"><i class="fas fa-tshirt" style="color:#60a5fa"></i> Bon de Préparation</button>             <button class="print-btn" onclick="printSection('orders')"><i class="fas fa-print"></i> Imprimer</button>
 <button class="btn btn-ghost btn-sm" onclick="exportOrdersExcel()"><i class="fas fa-file-excel" style="color:#10b981"></i> Export Excel</button>    
           </div>
         </div>
@@ -2719,7 +2722,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('inp-pass')?.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
   document.getElementById('inp-email')?.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
-  setInterval(checkAutoNotifications, 60000);
+// فحص حالة التتبع التلقائي كل 12 ساعة
+  check12HourTrackingSchedule();
+  setInterval(check12HourTrackingSchedule, 60 * 60 * 1000); // فحص شرط الـ 12 ساعة كل ساعة
 });
 
 function showLogin() {
@@ -5101,7 +5106,147 @@ function renderGallery() {
       datePicker.classList.add('hidden');
     }
   });
+/* ═══════════════════════════════════════════════════════
+   ZIMOU EXPRESS — AUTO-TRACKING & STOCK RESTORE SYSTEM
+═══════════════════════════════════════════════════════ */
 
+// 1. الدالة المساعدة لاسترجاع المخزون عند تسجيل روتور آلي
+async function restoreOrderStockAuto(order) {
+  let items = order.items;
+  if (typeof items === 'string') {
+    try { items = JSON.parse(items); } catch(e) { items = []; }
+  }
+
+  if (Array.isArray(items) && items.length > 0) {
+    for (const item of items) {
+      const pId = item.product_id;
+      const qty = parseInt(item.qty || item.quantity, 10) || 1;
+      if (!pId) continue;
+
+      const { data: prod } = await dbFrom('products').select('*').eq('id', pId).single();
+      if (prod) {
+        const updatedStock = (parseInt(prod.stock, 10) || 0) + qty;
+        let sizesArr = typeof prod.sizes === 'string' ? JSON.parse(prod.sizes || '[]') : (prod.sizes || []);
+
+        if (Array.isArray(sizesArr) && sizesArr.length > 0) {
+          sizesArr = sizesArr.map(s => {
+            if ((!item.size || s.size === item.size) && (!item.color || s.color === item.color)) {
+              return { ...s, qty: (parseInt(s.qty, 10) || 0) + qty };
+            }
+            return s;
+          });
+        }
+
+        await dbFrom('products').update({ stock: updatedStock, sizes: sizesArr }).eq('id', pId);
+        await dbFrom('stock_movements').insert([{
+          product_id: pId,
+          type: 'IN',
+          quantity: qty,
+          reason: `Retour automatique Zimou #${order.id} (${order.tracking_number})`
+        }]);
+      }
+    }
+  }
+}
+
+// 2. دالة الاتصال بـ API Zimou وتحديث الحالات
+async function syncZimouTracking(isManual = false) {
+  if (!ZR_API_TOKEN || ZR_API_TOKEN === 'YOUR_ZR_EXPRESS_API_TOKEN_HERE') {
+    if (isManual) toast("Veuillez configurer le token API Zimou Express !", "err");
+    return;
+  }
+
+  // اختيار الطلبيات التي لديها رقم تتبع وفي حالة انتظار أو شحن
+  const activeOrders = allOrders.filter(o => 
+    o.tracking_number && 
+    (o.status === 'Confirmed' || o.status === 'Shipped')
+  );
+
+  if (!activeOrders.length) {
+    if (isManual) toast("Aucune commande en cours avec un numéro de suivi Zimou.", "ok");
+    return;
+  }
+
+  const syncBtn = document.getElementById('btn-sync-zimou');
+  if (syncBtn && isManual) {
+    syncBtn.disabled = true;
+    syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#38bdf8;"></i> Sync en cours...';
+  }
+
+  let updatedCount = 0;
+  let returnCount = 0;
+
+  for (const order of activeOrders) {
+    try {
+      const trackingCode = String(order.tracking_number).trim();
+      const res = await fetch(`https://zimou.express/api/v3/packages/${trackingCode}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${ZR_API_TOKEN}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!res.ok) continue;
+
+      const data = await res.json();
+      // استخراج الحالة سواء كانت في status أو current_status أو package.status
+      const rawStatus = (data.status || data.current_status || (data.package && data.package.status) || '').toLowerCase();
+
+      let targetStatus = null;
+
+      // مطابقة حالات Zimou Express مع حالات متجرك
+      if (rawStatus.includes('livr') || rawStatus.includes('delivered')) {
+        targetStatus = 'Delivered';
+      } else if (rawStatus.includes('retour') || rawStatus.includes('annul') || rawStatus.includes('echou')) {
+        targetStatus = 'Cancelled';
+      } else if (rawStatus.includes('cours') || rawStatus.includes('transit') || rawStatus.includes('expédi')) {
+        targetStatus = 'Shipped';
+      }
+
+      // إذا تغيرت الحالة عن المسجل في المتجر
+      if (targetStatus && targetStatus !== order.status) {
+        // إذا كان روتور: استرجاع كميات المخزون فوراً
+        if (targetStatus === 'Cancelled') {
+          await restoreOrderStockAuto(order);
+          returnCount++;
+        }
+
+        await dbFrom('orders').update({ status: targetStatus }).eq('id', order.id);
+        logAudit('order', `Auto-Tracking Zimou: Commande #${order.id} (${trackingCode}) mise à jour → ${targetStatus}`, 'order');
+        updatedCount++;
+      }
+    } catch (e) {
+      console.warn(`Erreur vérification colis ${order.tracking_number}:`, e);
+    }
+  }
+
+  // تسجيل وقت آخر تحديث
+  localStorage.setItem('zimou_last_tracking_sync', Date.now().toString());
+
+  if (syncBtn && isManual) {
+    syncBtn.disabled = false;
+    syncBtn.innerHTML = '<i class="fas fa-sync-alt" style="color:#38bdf8;"></i> Sync Zimou';
+  }
+
+  if (updatedCount > 0) {
+    toast(`Zimou: ${updatedCount} commande(s) mise(s) à jour (${returnCount} retour(s) stock)`, 'ok');
+    addNotification('Mise à jour Zimou', `${updatedCount} statut(s) synchronisé(s) automatiquement.`);
+    await loadAll();
+  } else if (isManual) {
+    toast("Tous les statuts de livraison sont à jour.", "ok");
+  }
+}
+
+// 3. فاحص الـ 12 ساعة التلقائي
+function check12HourTrackingSchedule() {
+  const lastSync = parseInt(localStorage.getItem('zimou_last_tracking_sync'), 10) || 0;
+  const TWELVE_HOURS = 12 * 60 * 60 * 1000; // 12 ساعة بالمللي ثانية
+
+  if (Date.now() - lastSync >= TWELVE_HOURS) {
+    syncZimouTracking(false);
+  }
+}
  
 </script>
 </body>
