@@ -1540,9 +1540,9 @@ a { text-decoration: none; }
       <div class="ml-auto" style="display:flex;gap:8px;align-items:center">
   <div class="search-wrap"><i class="fas fa-search"></i><input type="text" placeholder="Chercher client, #ID..." oninput="searchOrders(this.value)"></div>
   
-  <!-- زر تصدير جهات الاتصال للحملات الإعلانية -->
-  <button class="btn btn-ghost btn-sm" onclick="exportCustomerContacts()" title="Exporter les numéros pour WhatsApp et Facebook Ads">
-    <i class="fas fa-address-book" style="color:#f59e0b"></i> Export Contacts
+<!-- الزر الجديد: مساعد حملات واتساب -->
+  <button class="btn btn-ghost btn-sm" onclick="openWaCampaignModal()" title="Lancer une campagne WhatsApp">
+    <i class="fab fa-whatsapp" style="color:#22c55e"></i> Campagne WhatsApp
   </button>
   
   <!-- الأزرار السابقة -->
@@ -2228,7 +2228,31 @@ a { text-decoration: none; }
     </div>
   </div>
 </div>
+<!-- WhatsApp Campaign Modal -->
+<div class="modal-overlay" id="modal-wa-campaign">
+  <div class="modal-box modal-md">
+    <div class="modal-hdr">
+      <h3><i class="fab fa-whatsapp" style="color:#22c55e; margin-right:8px;"></i> Campagne WhatsApp</h3>
+      <button class="modal-close" onclick="closeModal('modal-wa-campaign')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem; color:var(--text2); margin-bottom:15px; line-height:1.6;">
+        Écrivez votre message ci-dessous. <br>
+        <span style="color:var(--accent);">Astuce :</span> Utilisez <strong>{Nom}</strong> pour que le système insère automatiquement le prénom du client.
+      </p>
+      <div class="fg">
+        <textarea id="wa-msg-text" rows="5" placeholder="Bonjour {Nom}, notre nouvelle collection streetwear est disponible ! Profitez de la livraison gratuite..."></textarea>
+      </div>
+      <button class="btn btn-accent" onclick="generateWaLinks()" style="width:100%; margin-bottom:15px; display:flex; justify-content:center;">
+        <i class="fas fa-magic"></i> Générer la liste d'envoi
+      </button>
 
+      <div id="wa-clients-list" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+        <!-- ستظهر قائمة الزبائن هنا -->
+      </div>
+    </div>
+  </div>
+</div>
 <!-- Category -->
 <div class="modal-overlay" id="modal-cat">
   <div class="modal-box modal-sm">
@@ -5317,7 +5341,77 @@ function exportCustomerContacts() {
   toast(`${customerArray.length} contact(s) unique(s) exporté(s) !`, "ok");
   logAudit('system', `Export de ${customerArray.length} contacts pour Audiences/Marketing`, 'system');
 }
-   
+  /* ─── WHATSAPP CAMPAIGN ASSISTANT ─── */
+function openWaCampaignModal() {
+  document.getElementById('wa-msg-text').value = '';
+  document.getElementById('wa-clients-list').innerHTML = '';
+  openModal('modal-wa-campaign');
+}
+
+function generateWaLinks() {
+  const msgTemplate = document.getElementById('wa-msg-text').value.trim();
+  if (!msgTemplate) { 
+    toast('Veuillez écrire un message avant de générer la liste.', 'err'); 
+    return; 
+  }
+
+  const listContainer = document.getElementById('wa-clients-list');
+  const uniqueClients = {};
+
+  // فلترة الأرقام لمنع التكرار (استخراج الأرقام الصالحة فقط)
+  allOrders.forEach(o => {
+    if (!o.customer_phone) return;
+    
+    // تنظيف الرقم من المسافات
+    let phone = String(o.customer_phone).replace(/\s+/g, '');
+    
+    // تحويل الرقم إلى الصيغة الدولية للجزائر (استبدال الصفر الأول بـ 213)
+    if (phone.startsWith('0')) {
+      phone = '213' + phone.substring(1);
+    } else if (!phone.startsWith('213') && !phone.startsWith('+')) {
+      phone = '213' + phone;
+    }
+
+    if (!uniqueClients[phone]) {
+      // استخراج الاسم الأول للزبون
+      let firstName = o.first_name || '';
+      if (!firstName && o.customer_name) {
+        const parts = o.customer_name.trim().split(' ');
+        firstName = parts.length > 1 ? parts.slice(1).join(' ') : parts[0];
+      }
+      uniqueClients[phone] = firstName || 'Client';
+    }
+  });
+
+  const clientsArr = Object.entries(uniqueClients);
+  
+  if (clientsArr.length === 0) {
+    listContainer.innerHTML = '<div class="empty-st"><i class="fas fa-users-slash"></i><p>Aucun client trouvé.</p></div>';
+    return;
+  }
+
+  // رسم أزرار الإرسال
+  listContainer.innerHTML = clientsArr.map(([phone, name]) => {
+    // تعويض {Nom} باسم الزبون الفعلي
+    const personalizedMsg = msgTemplate.replace(/{Nom}/g, name);
+    // تشفير الرسالة لتناسب الروابط
+    const waLink = `https://wa.me/${phone.replace('+', '')}?text=${encodeURIComponent(personalizedMsg)}`;
+    
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg3); padding:10px 14px; border-radius:10px; border:1px solid var(--border);">
+        <div style="min-width:0; flex:1;">
+          <strong style="display:block; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name}</strong>
+          <span style="font-size:0.75rem; color:var(--text3);">${phone}</span>
+        </div>
+        <a href="${waLink}" target="_blank" class="btn btn-sm" style="background:#22c55e; color:#fff; border:none; text-decoration:none; display:flex; align-items:center; gap:6px; flex-shrink:0;">
+          <i class="fab fa-whatsapp"></i> Envoyer
+        </a>
+      </div>
+    `;
+  }).join('');
+
+  toast(`${clientsArr.length} lien(s) WhatsApp généré(s) !`, 'ok');
+} 
 </script>
 </body>
 
