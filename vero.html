@@ -1539,7 +1539,8 @@ a { text-decoration: none; }
           </div>
           <div class="ml-auto" style="display:flex;gap:8px;align-items:center">
             <div class="search-wrap"><i class="fas fa-search"></i><input type="text" placeholder="Chercher client, #ID..." oninput="searchOrders(this.value)"></div>
-            <button class="print-btn" onclick="printSection('orders')"><i class="fas fa-print"></i> Imprimer</button>
+         <button class="btn btn-ghost btn-sm" onclick="printPreparationSlip()"><i class="fas fa-tshirt" style="color:#60a5fa"></i> Bon de Préparation</button>
+             <button class="print-btn" onclick="printSection('orders')"><i class="fas fa-print"></i> Imprimer</button>
 <button class="btn btn-ghost btn-sm" onclick="exportOrdersExcel()"><i class="fas fa-file-excel" style="color:#10b981"></i> Export Excel</button>          </div>
         </div>
       <div class="card" id="orders-print-area">
@@ -2841,7 +2842,143 @@ function renderActivityFeed() {
     </div>
   `).join('');
 }
+/* ─── KASHF EL WARSHA (BON DE PRÉPARATION ATELIER) ─── */
+function printPreparationSlip() {
+  // تجميع الطلبيات المؤكدة فقط
+  const targetOrders = allOrders.filter(o => o.status === 'Confirmed');
+  
+  if (!targetOrders.length) {
+    toast("Aucune commande 'Confirmée' à préparer !", "err");
+    return;
+  }
 
+  // تجميع ودمج المنتجات حسب (الاسم + اللون + المقاس)
+  const prepList = {};
+  let totalPieces = 0;
+
+  targetOrders.forEach(o => {
+    let items = o.items;
+    if (typeof items === 'string') {
+      try { items = JSON.parse(items); } catch(e) { items = []; }
+    }
+
+    if (Array.isArray(items)) {
+      items.forEach(item => {
+        const name = item.name || 'T-shirt';
+        const color = item.color || 'Standard';
+        const size = item.size || 'Standard';
+        const qty = parseInt(item.qty || item.quantity || 1, 10);
+        const key = `${name}__${color}__${size}`;
+
+        totalPieces += qty;
+
+        if (prepList[key]) {
+          prepList[key].qty += qty;
+        } else {
+          prepList[key] = { name, color, size, qty };
+        }
+      });
+    }
+  });
+
+  // فتح نافذة طباعة مخصصة ومنسقة كوثيقة ورشة
+  const printWin = window.open('', '', 'width=850,height=700');
+  const now = new Date().toLocaleString('fr-FR');
+
+  let rowsHtml = '';
+  Object.values(prepList)
+    .sort((a, b) => a.name.localeCompare(b.name) || a.size.localeCompare(b.size))
+    .forEach(item => {
+      rowsHtml += `
+        <tr>
+          <td style="padding:10px 14px; border-bottom:1px solid #e2e8f0; font-weight:bold;">${item.name}</td>
+          <td style="padding:10px 14px; border-bottom:1px solid #e2e8f0; text-align:center;">${item.color}</td>
+          <td style="padding:10px 14px; border-bottom:1px solid #e2e8f0; text-align:center;"><span style="display:inline-block; padding:2px 8px; border:1px solid #000; border-radius:4px; font-weight:bold;">${item.size}</span></td>
+          <td style="padding:10px 14px; border-bottom:1px solid #e2e8f0; text-align:center; font-size:1.15rem; font-weight:900; color:#0f172a;">${item.qty}</td>
+        </tr>
+      `;
+    });
+
+  const docHtml = `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <title>Bon de Préparation Atelier - ICOSIUM</title>
+      <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 30px; color: #0f172a; margin: 0; }
+        .header-box { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 16px; margin-bottom: 24px; }
+        .brand-title { font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; margin: 0; }
+        .sub { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+        .meta-box { text-align: right; font-size: 0.85rem; }
+        .summary-cards { display: flex; gap: 16px; margin-bottom: 24px; }
+        .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; flex: 1; }
+        .card-num { font-size: 1.4rem; font-weight: 900; color: #00a87e; }
+        .card-lbl { font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 0.92rem; }
+        th { background: #f1f5f9; padding: 10px 14px; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; text-align: left; }
+        .footer-sign { display: flex; justify-content: space-between; margin-top: 50px; font-size: 0.85rem; color: #475569; }
+        @media print {
+          body { padding: 0; }
+          button { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header-box">
+        <div>
+          <h1 class="brand-title">ICOSIUM CASUAL — Atelier</h1>
+          <div class="sub">Feuille de route & Préparation des impressions (DTF / Broderie)</div>
+        </div>
+        <div class="meta-box">
+          <div><strong>Date:</strong> ${now}</div>
+          <div><strong>Filtre:</strong> Commandes Confirmées</div>
+        </div>
+      </div>
+
+      <div class="summary-cards">
+        <div class="card">
+          <div class="card-num">${targetOrders.length}</div>
+          <div class="card-lbl">Total Commandes</div>
+        </div>
+        <div class="card">
+          <div class="card-num">${totalPieces}</div>
+          <div class="card-lbl">Total Pièces à Imprimer</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Article / Modèle</th>
+            <th style="text-align:center;">Couleur</th>
+            <th style="text-align:center;">Taille</th>
+            <th style="text-align:center;">Quantité requise</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+
+      <div class="footer-sign">
+        <div>Préparé par: ______________________</div>
+        <div>Validation Atelier: ______________________</div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  printWin.document.write(docHtml);
+  printWin.document.close();
+  printWin.focus();
+
+  setTimeout(() => {
+    printWin.print();
+    printWin.close();
+    logAudit('system', `Impression Bon de Préparation (${totalPieces} pièces)`, 'system');
+  }, 400);
+}
 /* ─── CALCUL UNIT ECONOMICS (COÛT & MARGE DYNAMIQUE) ─── */
 function calculateUnitEconomics() {
   const blankCost = parseFloat(document.getElementById('prd-blank-cost')?.value) || 0;
