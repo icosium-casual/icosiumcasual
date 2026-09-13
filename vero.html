@@ -2034,7 +2034,12 @@ a { text-decoration: none; }
         <h4><i class="fas fa-shopping-basket"></i> Articles</h4>
         <table class="items-tbl" id="mod-items" style="margin-top:10px"></table>
       </div>
+     <!-- حقل رقم التتبع Zimou المضاف -->
       <div class="form-row form-row-2" style="margin-bottom:16px">
+        <div class="fg">
+          <label>N° de Suivi Zimou (Tracking)</label>
+          <input type="text" id="mod-tracking-input" placeholder="Ex: ZR-123456789">
+        </div>
         <div class="fg">
           <label>Statut</label>
           <select id="mod-status-sel">
@@ -2042,21 +2047,18 @@ a { text-decoration: none; }
             <option value="Confirmed">Confirmée</option>
             <option value="Shipped">En cours de livraison</option>
             <option value="Delivered">Livrée</option>
-            <option value="Cancelled">Annulée</option>
+            <option value="Cancelled">Annulée (Retour)</option>
           </select>
         </div>
-        <div class="fg">
-          <label>Assigner un Livreur</label>
-          <select id="mod-livreur-sel"><option value="">— Non assigné —</option></select>
-        </div>
       </div>
+
       <div class="fg" style="margin-bottom:0">
         <label>Note interne (admin)</label>
         <textarea id="mod-note" placeholder="Remarques internes..."></textarea>
       </div>
     </div>
     <div class="modal-foot">
-      <button type="button" class="btn btn-ghost" id="btn-print-bordereau" style="display:none; color:#60a5fa; border-color:rgba(96,165,250,.3);">
+      <button type="button" class="btn btn-ghost" id="btn-print-bordereau" style="color:#60a5fa; border-color:rgba(96,165,250,.3);">
         <i class="fas fa-file-pdf"></i> Bordereau Zimou
       </button>
       <button class="btn btn-ghost" onclick="printOrderDetail()"><i class="fas fa-print"></i> Imprimer Commande</button>
@@ -3625,16 +3627,14 @@ function renderOrders(orders) {
       <td style="font-family:monospace; color:#60a5fa;">${tagSuivi}</td>
       <td style="color:var(--text3); font-size:0.75rem;">${dimensions}</td>
       <td>${statusPill(o.status)}</td>
-      <td>
+   <td>
         <div style="display:flex; gap:6px; align-items:center;">
-          <button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o)})' title="Détails">
+          <button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o)})' title="Détails de la commande">
             <i class="fas fa-expand-alt"></i>
           </button>
-          ${(o.tracking_number || o.tracking_label_url) ? `
-            <button class="icn-btn" style="color:#60a5fa;" onclick="printZimouBordereau('${o.tracking_number || ''}', '${o.tracking_label_url || ''}')" title="Imprimer le Bordereau Zimou">
-              <i class="fas fa-file-pdf"></i>
-            </button>
-          ` : ''}
+          <button class="icn-btn" style="color:#60a5fa; border-color:rgba(96,165,250,0.3);" onclick="printZimouBordereau('${o.tracking_number || ''}', '${o.tracking_label_url || ''}', ${o.id})" title="Imprimer le Bordereau Zimou">
+            <i class="fas fa-file-pdf"></i>
+          </button>
         </div>
       </td>
     </tr>`;
@@ -3729,15 +3729,16 @@ function openOrderModal(o) {
         }).join('') 
       : '<tr><td colspan="2" style="color:var(--text3);text-align:center;padding:14px">Aucun article</td></tr>';
   }
-   // تفعيل وإظهار زر البوردروا إن وُجد رقم تتبع للطلبية
+  // تعبئة حقل التتبع وتجهيز زر البوردروا
+  const trackInput = document.getElementById('mod-tracking-input');
+  if (trackInput) trackInput.value = o.tracking_number || '';
+
   const bordereauBtn = document.getElementById('btn-print-bordereau');
   if (bordereauBtn) {
-    if (o.tracking_number || o.tracking_label_url) {
-      bordereauBtn.style.display = 'inline-flex';
-      bordereauBtn.onclick = () => printZimouBordereau(o.tracking_number, o.tracking_label_url);
-    } else {
-      bordereauBtn.style.display = 'none';
-    }
+    bordereauBtn.onclick = () => {
+      const currentTrack = trackInput ? trackInput.value.trim() : (o.tracking_number || '');
+      printZimouBordereau(currentTrack, o.tracking_label_url, o.id);
+    };
   }
   openModal('modal-order');
 }
@@ -4047,26 +4048,35 @@ function renderAllImages() {
   });
 }
 /* ─── IMPRESSION DU BORDEREAU ZIMOU EXPRESS (PDF) ─── */
-async function printZimouBordereau(trackingNumber, labelUrl) {
-  if (!trackingNumber && !labelUrl) {
-    toast("Cette commande n'a pas encore de numéro de suivi Zimou !", "err");
-    return;
+async function printZimouBordereau(trackingNumber, labelUrl, orderId = null) {
+  let targetTracking = trackingNumber ? String(trackingNumber).trim() : '';
+
+  // إذا لم يكن رقم التتبع متوفراً في الطلبية، نطلبه من المدير فوراً
+  if (!targetTracking && !labelUrl) {
+    const input = prompt("يرجى إدخال رقم التتبع (Tracking Number) الممنوح من Zimou Express لهذه الطلبية:");
+    if (!input || !input.trim()) return;
+    targetTracking = input.trim();
+
+    // حفظ رقم التتبع في قاعدة بيانات Supabase تلقائياً
+    if (orderId) {
+      await dbFrom('orders').update({ tracking_number: targetTracking }).eq('id', orderId);
+      const ord = allOrders.find(x => x.id === orderId);
+      if (ord) ord.tracking_number = targetTracking;
+      toast("Numéro de suivi enregistré avec succès !", "ok");
+    }
   }
 
-  // إذا كان رابط الـ PDF مخزناً مسبقاً في الطلبية
+  // رابط الملصق الرسمي لـ Zimou
   let finalPdfUrl = labelUrl;
-
-  // إذا لم يكن الرابط محفوظاً ولكن نملك رقم التتبع، نجلبه عبر API Zimou أو نفتح رابط التيكيت الرسمي
-  if (!finalPdfUrl && trackingNumber) {
-    finalPdfUrl = `https://zimou.express/api/v3/packages/${trackingNumber}/label?token=${ZR_API_TOKEN}`;
+  if (!finalPdfUrl && targetTracking) {
+    finalPdfUrl = `https://zimou.express/api/v3/packages/${targetTracking}/label?token=${ZR_API_TOKEN}`;
   }
 
   toast("Ouverture du bordereau en cours...", "ok");
 
-  // فتح الملف في نافذة جديدة وإرسال أمر الطباعة تلقائياً
+  // فتح نافذة الطباعة المنبثقة
   const printWindow = window.open(finalPdfUrl, '_blank');
   if (!printWindow) {
-    // في حال قام المتصفح بحظر النوافذ المنبثقة
     window.location.href = finalPdfUrl;
   }
 }
