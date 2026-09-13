@@ -1541,7 +1541,8 @@ a { text-decoration: none; }
             <div class="search-wrap"><i class="fas fa-search"></i><input type="text" placeholder="Chercher client, #ID..." oninput="searchOrders(this.value)"></div>
          <button class="btn btn-ghost btn-sm" onclick="printPreparationSlip()"><i class="fas fa-tshirt" style="color:#60a5fa"></i> Bon de Préparation</button>
              <button class="print-btn" onclick="printSection('orders')"><i class="fas fa-print"></i> Imprimer</button>
-<button class="btn btn-ghost btn-sm" onclick="exportOrdersExcel()"><i class="fas fa-file-excel" style="color:#10b981"></i> Export Excel</button>          </div>
+<button class="btn btn-ghost btn-sm" onclick="exportOrdersExcel()"><i class="fas fa-file-excel" style="color:#10b981"></i> Export Excel</button>    
+          </div>
         </div>
       <div class="card" id="orders-print-area">
   <div class="tbl-wrap">
@@ -2054,8 +2055,8 @@ a { text-decoration: none; }
         <textarea id="mod-note" placeholder="Remarques internes..."></textarea>
       </div>
     </div>
-<div class="modal-foot">
-      <button type="button" class="btn btn-ghost" id="btn-print-bordereau" style="display:none; color:#60a5fa; border-color:rgba(96,165,250,.3);" onclick="printCurrentOrderBordereau()">
+    <div class="modal-foot">
+      <button type="button" class="btn btn-ghost" id="btn-print-bordereau" style="display:none; color:#60a5fa; border-color:rgba(96,165,250,.3);">
         <i class="fas fa-file-pdf"></i> Bordereau Zimou
       </button>
       <button class="btn btn-ghost" onclick="printOrderDetail()"><i class="fas fa-print"></i> Imprimer Commande</button>
@@ -3547,7 +3548,6 @@ function renderRecentOrders(orders) {
     <td style="color:var(--text3);font-size:.8rem">${fmtDate(o.created_at)}</td>
   </tr>`).join('');
 }
-
 /* ─── ORDERS TABLE (ZIMOU EXPRESS 21 FIELDS) ─── */
 function renderOrders(orders) {
   const el = document.getElementById('orders-body');
@@ -3558,13 +3558,11 @@ function renderOrders(orders) {
     return; 
   }
 
-  // خريطة الولايات لتحويل ID إلى اسم مقروء
   const wilayaMap = (typeof ZIMOU_DATA !== 'undefined')
     ? Object.fromEntries(Object.entries(ZIMOU_DATA).map(([name, obj]) => [obj.id, name]))
     : Object.fromEntries(allWilayas.map(w => [w.id, w.name]));
 
   el.innerHTML = orders.map(o => {
-    // 1. استخراج اللقب والاسم
     let lastName = o.last_name || '';
     let firstName = o.first_name || '';
     if (!lastName && o.customer_name) {
@@ -3573,7 +3571,6 @@ function renderOrders(orders) {
       firstName = parts.slice(1).join(' ') || '';
     }
 
-    // 2. استخراج الولاية والبلدية والعنوان
     let wilayaName = wilayaMap[o.wilaya_id] || o.wilaya_id || '';
     let commune = o.commune || '';
     let address = o.customer_address || '';
@@ -3587,7 +3584,6 @@ function renderOrders(orders) {
       }
     }
 
-    // 3. تلخيص المنتجات
     let itemsSummary = 'ICOSIUM CASUAL';
     let items = o.items;
     if (typeof items === 'string') {
@@ -3597,9 +3593,8 @@ function renderOrders(orders) {
       itemsSummary = items.map(i => `${i.qty || 1}× ${i.name || 'T-shirt'} (${i.size || 'M'})`).join(', ');
     }
 
-    // 4. بقية حقول Zimou الافتراضية
     const poids = o.weight || 1;
-    const typeLiv = o.delivery_type === 'stopdesk' ? 'stopdesk' : 'domicile';
+    const typeLiv = o.delivery_type === 'stopdesk' ? 'Point Relais' : 'Express';
     const livrGratuite = o.free_shipping ? 'Oui' : 'Non';
     const ouvrable = o.is_openable !== false ? 'Oui' : 'Non';
     const idBureau = o.office_id || '—';
@@ -3619,7 +3614,7 @@ function renderOrders(orders) {
       <td style="max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${address}">${address || '—'}</td>
       <td style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${itemsSummary}">${itemsSummary}</td>
       <td style="text-align:center;">${poids} kg</td>
-      <td><span class="pill ${typeLiv === 'stopdesk' ? 'p-shipped' : 'p-active'}">${typeLiv}</span></td>
+      <td><span class="pill ${typeLiv === 'Point Relais' ? 'p-shipped' : 'p-active'}">${typeLiv}</span></td>
       <td style="color:var(--accent); font-weight:800; white-space:nowrap;">${fmtPrice(o.total_price)}</td>
       <td style="text-align:center;">${livrGratuite}</td>
       <td style="text-align:center;">${ouvrable}</td>
@@ -3631,20 +3626,16 @@ function renderOrders(orders) {
       <td style="color:var(--text3); font-size:0.75rem;">${dimensions}</td>
       <td>${statusPill(o.status)}</td>
       <td>
-        <button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o)})' <td>
-        <div style="display:flex; gap:5px; align-items:center;">
+        <div style="display:flex; gap:6px; align-items:center;">
           <button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o)})' title="Détails">
             <i class="fas fa-expand-alt"></i>
           </button>
-          ${o.tracking_number || o.tracking_label_url ? `
+          ${(o.tracking_number || o.tracking_label_url) ? `
             <button class="icn-btn" style="color:#60a5fa;" onclick="printZimouBordereau('${o.tracking_number || ''}', '${o.tracking_label_url || ''}')" title="Imprimer le Bordereau Zimou">
               <i class="fas fa-file-pdf"></i>
             </button>
           ` : ''}
         </div>
-      </td>>
-          <i class="fas fa-expand-alt"></i>
-        </button>
       </td>
     </tr>`;
   }).join('');
