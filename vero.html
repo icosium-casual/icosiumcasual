@@ -1537,15 +1537,22 @@ a { text-decoration: none; }
             <button class="filter-pill" onclick="filterOrders('Delivered',this)">Livrées <span class="filter-count" id="fc-delivered">0</span></button>
             <button class="filter-pill" onclick="filterOrders('Cancelled',this)">Annulées <span class="filter-count" id="fc-cancelled">0</span></button>
           </div>
-          <div class="ml-auto" style="display:flex;gap:8px;align-items:center">
-            <div class="search-wrap"><i class="fas fa-search"></i><input type="text" placeholder="Chercher client, #ID..." oninput="searchOrders(this.value)"></div>
-<!-- زر مزامنة التتبع الآلي مع Zimou Express -->
-<button class="btn btn-ghost btn-sm" id="btn-sync-zimou" onclick="syncZimouTracking(true)" title="Vérifier le statut des colis auprès de Zimou Express">
-  <i class="fas fa-sync-alt" style="color:#38bdf8;"></i> Sync Zimou
-</button>
-<button class="btn btn-ghost btn-sm" onclick="printPreparationSlip()"><i class="fas fa-tshirt" style="color:#60a5fa"></i> Bon de Préparation</button>             <button class="print-btn" onclick="printSection('orders')"><i class="fas fa-print"></i> Imprimer</button>
-<button class="btn btn-ghost btn-sm" onclick="exportOrdersExcel()"><i class="fas fa-file-excel" style="color:#10b981"></i> Export Excel</button>    
-          </div>
+      <div class="ml-auto" style="display:flex;gap:8px;align-items:center">
+  <div class="search-wrap"><i class="fas fa-search"></i><input type="text" placeholder="Chercher client, #ID..." oninput="searchOrders(this.value)"></div>
+  
+  <!-- زر تصدير جهات الاتصال للحملات الإعلانية -->
+  <button class="btn btn-ghost btn-sm" onclick="exportCustomerContacts()" title="Exporter les numéros pour WhatsApp et Facebook Ads">
+    <i class="fas fa-address-book" style="color:#f59e0b"></i> Export Contacts
+  </button>
+  
+  <!-- الأزرار السابقة -->
+  <button class="btn btn-ghost btn-sm" id="btn-sync-zimou" onclick="syncZimouTracking(true)" title="Vérifier le statut des colis auprès de Zimou Express">
+    <i class="fas fa-sync-alt" style="color:#38bdf8;"></i> Sync Zimou
+  </button>
+  <button class="btn btn-ghost btn-sm" onclick="printPreparationSlip()"><i class="fas fa-tshirt" style="color:#60a5fa"></i> Bon de Préparation</button>
+  <button class="print-btn" onclick="printSection('orders')"><i class="fas fa-print"></i> Imprimer</button>
+  <button class="btn btn-ghost btn-sm" onclick="exportOrdersExcel()"><i class="fas fa-file-excel" style="color:#10b981"></i> Export Excel</button>
+</div>
         </div>
       <div class="card" id="orders-print-area">
   <div class="tbl-wrap">
@@ -5247,7 +5254,70 @@ function check12HourTrackingSchedule() {
     syncZimouTracking(false);
   }
 }
- 
+ /* ─── EXPORT CONTACTS (POUR SMS / WHATSAPP / FACEBOOK ADS) ─── */
+function exportCustomerContacts() {
+  if (!allOrders || allOrders.length === 0) {
+    toast("Aucune commande disponible pour extraire les contacts.", "err");
+    return;
+  }
+
+  // استخدام كائن لتصفية الأرقام المكررة وحساب قيمة كل زبون (LTV)
+  const customers = {};
+
+  allOrders.forEach(o => {
+    if (!o.customer_phone) return;
+    
+    // تنظيف رقم الهاتف من المسافات
+    const phone = String(o.customer_phone).replace(/\s+/g, '');
+    
+    if (!customers[phone]) {
+      customers[phone] = {
+        name: o.customer_name || 'Client',
+        phone: phone,
+        orderCount: 0,
+        totalSpent: 0
+      };
+    }
+    
+    customers[phone].orderCount += 1;
+    
+    // حساب المبالغ المنفقة للطلبيات غير الملغاة فقط (مفيد جداً لإعلانات فيسبوك)
+    if (o.status !== 'Cancelled') {
+      customers[phone].totalSpent += parseFloat(o.total_price || 0);
+    }
+  });
+
+  const customerArray = Object.values(customers);
+  
+  if (customerArray.length === 0) {
+    toast("Aucun numéro de téléphone valide trouvé.", "err");
+    return;
+  }
+
+  // تجهيز ملف CSV احترافي (الترويسة)
+  let csvContent = "Telephone,Nom,Nombre_Commandes,Total_Depense_DA\n";
+  
+  // ترتيب الزبائن من الأكثر إنفاقاً إلى الأقل
+  customerArray.sort((a, b) => b.totalSpent - a.totalSpent).forEach(c => {
+    // تنسيق الأرقام كـ String حتى لا يحذف الإكسل الصفر الذي في البداية (0555...)
+    csvContent += `="${c.phone}","${c.name.replace(/"/g, '""')}",${c.orderCount},${c.totalSpent}\n`;
+  });
+
+  // إنشاء الملف وتنزيله
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `icosium_audiences_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  toast(`${customerArray.length} contact(s) unique(s) exporté(s) !`, "ok");
+  logAudit('system', `Export de ${customerArray.length} contacts pour Audiences/Marketing`, 'system');
+}
+   
 </script>
 </body>
 
