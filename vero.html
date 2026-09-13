@@ -3747,7 +3747,14 @@ async function saveOrder() {
   const newStatus = document.getElementById('mod-status-sel').value;
   const livreurId = document.getElementById('mod-livreur-sel').value || null;
   const noteAdmin = document.getElementById('mod-note').value || null;
+const trackingInputVal = document.getElementById('mod-tracking-input')?.value.trim() || null;
 
+    const updatePayload = { 
+      status: newStatus, 
+      livreur_id: livreurId, 
+      note_admin: noteAdmin,
+      tracking_number: trackingInputVal || trackingCode
+    };
   try {
     const { data: order, error: fetchErr } = await dbFrom('orders').select('*').eq('id', currentOrderId).single();
     if (fetchErr || !order) {
