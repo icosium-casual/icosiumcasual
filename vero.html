@@ -2054,8 +2054,11 @@ a { text-decoration: none; }
         <textarea id="mod-note" placeholder="Remarques internes..."></textarea>
       </div>
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="printOrderDetail()"><i class="fas fa-print"></i> Imprimer</button>
+<div class="modal-foot">
+      <button type="button" class="btn btn-ghost" id="btn-print-bordereau" style="display:none; color:#60a5fa; border-color:rgba(96,165,250,.3);" onclick="printCurrentOrderBordereau()">
+        <i class="fas fa-file-pdf"></i> Bordereau Zimou
+      </button>
+      <button class="btn btn-ghost" onclick="printOrderDetail()"><i class="fas fa-print"></i> Imprimer Commande</button>
       <button class="btn btn-ghost" onclick="closeModal('modal-order')">Fermer</button>
       <button class="btn btn-accent" onclick="saveOrder()"><i class="fas fa-save"></i> Enregistrer</button>
     </div>
@@ -3628,7 +3631,18 @@ function renderOrders(orders) {
       <td style="color:var(--text3); font-size:0.75rem;">${dimensions}</td>
       <td>${statusPill(o.status)}</td>
       <td>
-        <button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o)})' title="Détails">
+        <button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o)})' <td>
+        <div style="display:flex; gap:5px; align-items:center;">
+          <button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o)})' title="Détails">
+            <i class="fas fa-expand-alt"></i>
+          </button>
+          ${o.tracking_number || o.tracking_label_url ? `
+            <button class="icn-btn" style="color:#60a5fa;" onclick="printZimouBordereau('${o.tracking_number || ''}', '${o.tracking_label_url || ''}')" title="Imprimer le Bordereau Zimou">
+              <i class="fas fa-file-pdf"></i>
+            </button>
+          ` : ''}
+        </div>
+      </td>>
           <i class="fas fa-expand-alt"></i>
         </button>
       </td>
@@ -3723,6 +3737,16 @@ function openOrderModal(o) {
           `;
         }).join('') 
       : '<tr><td colspan="2" style="color:var(--text3);text-align:center;padding:14px">Aucun article</td></tr>';
+  }
+   // تفعيل وإظهار زر البوردروا إن وُجد رقم تتبع للطلبية
+  const bordereauBtn = document.getElementById('btn-print-bordereau');
+  if (bordereauBtn) {
+    if (o.tracking_number || o.tracking_label_url) {
+      bordereauBtn.style.display = 'inline-flex';
+      bordereauBtn.onclick = () => printZimouBordereau(o.tracking_number, o.tracking_label_url);
+    } else {
+      bordereauBtn.style.display = 'none';
+    }
   }
   openModal('modal-order');
 }
@@ -4031,7 +4055,30 @@ function renderAllImages() {
     container.appendChild(wrapper);
   });
 }
+/* ─── IMPRESSION DU BORDEREAU ZIMOU EXPRESS (PDF) ─── */
+async function printZimouBordereau(trackingNumber, labelUrl) {
+  if (!trackingNumber && !labelUrl) {
+    toast("Cette commande n'a pas encore de numéro de suivi Zimou !", "err");
+    return;
+  }
 
+  // إذا كان رابط الـ PDF مخزناً مسبقاً في الطلبية
+  let finalPdfUrl = labelUrl;
+
+  // إذا لم يكن الرابط محفوظاً ولكن نملك رقم التتبع، نجلبه عبر API Zimou أو نفتح رابط التيكيت الرسمي
+  if (!finalPdfUrl && trackingNumber) {
+    finalPdfUrl = `https://zimou.express/api/v3/packages/${trackingNumber}/label?token=${ZR_API_TOKEN}`;
+  }
+
+  toast("Ouverture du bordereau en cours...", "ok");
+
+  // فتح الملف في نافذة جديدة وإرسال أمر الطباعة تلقائياً
+  const printWindow = window.open(finalPdfUrl, '_blank');
+  if (!printWindow) {
+    // في حال قام المتصفح بحظر النوافذ المنبثقة
+    window.location.href = finalPdfUrl;
+  }
+}
 function readFileAsDataURL(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
