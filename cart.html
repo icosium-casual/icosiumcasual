@@ -78,64 +78,62 @@
 
                         <!-- نوع الشحن -->
                        <!-- نوع الشحن -->
+                     <!-- الولاية -->
                         <div class="checkout-field">
-                            <label for="checkout-delivery-type">Type de livraison (طريقة الشحن) *</label>
+                            <label for="checkout-wilaya">Wilaya (الولاية) *</label>
                             <div class="input-wrapper">
-                                <i class="fas fa-box"></i>
-                                <select id="checkout-delivery-type">
-                                    <option value="domicile" selected>À domicile (توصيل إلى باب المنزل)</option>
-                                    <option value="stopdesk">Stopdesk (استلام من مكتب Zimou Express)</option>
+                                <i class="fas fa-map-location-dot"></i>
+                                <select id="checkout-wilaya" required>
+                                    <option value="" disabled selected>— Choisir la Wilaya —</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- 💡 حاوية التوصيل للمنزل (تختفي عند اختيار المكتب) 💡 -->
-                        <div id="domicile-fields-container">
-                            <!-- الولاية -->
-                            <div class="checkout-field">
-                                <label for="checkout-wilaya">Wilaya de livraison *</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-map-location-dot"></i>
-                                    <select id="checkout-wilaya" required>
-                                        <option value="" disabled selected>— Choisir la Wilaya —</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- البلدية -->
-                            <div class="checkout-field">
-                                <label for="checkout-commune">Commune (البلدية) *</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-city"></i>
-                                    <select id="checkout-commune" required disabled>
-                                        <option value="" disabled selected>— Sélectionnez d'abord une wilaya —</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- العنوان -->
-                            <div class="checkout-field">
-                                <label for="checkout-address">Adresse exacte (العنوان بالتفصيل) *</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-location-dot"></i>
-                                    <input type="text" id="checkout-address" required placeholder="Cité, N° de rue, Bâtiment...">
-                                </div>
+                        <!-- البلدية -->
+                        <div class="checkout-field">
+                            <label for="checkout-commune">Commune (البلدية) *</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-city"></i>
+                                <select id="checkout-commune" required disabled>
+                                    <option value="" disabled selected>— Sélectionnez d'abord une wilaya —</option>
+                                </select>
                             </div>
                         </div>
 
-                        <!-- 💡 حاوية مكاتب التوصيل (تظهر فقط عند اختيار Stopdesk) 💡 -->
-                        <div id="stopdesk-fields-container" style="display: none;">
-                            <div class="checkout-field">
-                                <label for="checkout-stopdesk-office">Bureau Zimou Express (المكتب) *</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-store"></i>
-                                    <select id="checkout-stopdesk-office">
-                                        <option value="" disabled selected>— Choisir le bureau Zimou le plus proche —</option>
-                                        <!-- سيتم ملؤها بالجافاسكربت -->
-                                    </select>
+                        <!-- خيارات التوصيل (تطابق الصورة تماماً وتظهر بعد اختيار الولاية) -->
+                        <div class="checkout-delivery-options" id="delivery-options-container" style="display: none; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 20px; background: var(--bg3);">
+                            <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                                <h4 style="margin: 0; font-weight: 800; font-size: 1rem; color: var(--text);">
+                                    Livraison <i class="fas fa-truck-fast" style="margin-left: 5px;"></i>
+                                </h4>
+                            </div>
+                            
+                            <label style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; cursor: pointer;">
+                                <span style="font-weight: 800; font-family: 'Cabinet Grotesk', sans-serif; font-size: 1.15rem; color: var(--text);" id="label-price-domicile">DA 0</span>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="color: var(--text); font-weight: 600; font-size: 0.95rem;">À domicile - للمنزل</span>
+                                    <input type="radio" name="delivery_type" value="domicile" checked style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;">
                                 </div>
+                            </label>
+                            
+                            <label style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; cursor: pointer; border-top: 1px solid var(--border);">
+                                <span style="font-weight: 800; font-family: 'Cabinet Grotesk', sans-serif; font-size: 1.15rem; color: var(--text);" id="label-price-stopdesk">DA 0</span>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="color: var(--text); font-weight: 600; font-size: 0.95rem;">Stop desk - للمكتب</span>
+                                    <input type="radio" name="delivery_type" value="stopdesk" style="width: 20px; height: 20px; accent-color: var(--text); cursor: pointer;">
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- العنوان (يختفي تلقائياً عند اختيار المكتب) -->
+                        <div class="checkout-field" id="address-container">
+                            <label for="checkout-address">Adresse exacte (العنوان بالتفصيل) *</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-location-dot"></i>
+                                <input type="text" id="checkout-address" required placeholder="Cité, N° de rue, Bâtiment...">
                             </div>
                         </div>
+
                         <div class="checkout-divider"></div>
 
                         <!-- المجموع والأسعار -->
@@ -346,18 +344,15 @@
 
     // دالة تحديث السعر
     function updatePricing(subtotalOverride) {
-        const deliveryType = document.getElementById('checkout-delivery-type')?.value;
+        const wilaya = document.getElementById('checkout-wilaya')?.value;
+        const selectedDelivery = document.querySelector('input[name="delivery_type"]:checked')?.value || 'domicile';
         let shippingFee = 0;
 
-        if (deliveryType === 'domicile') {
-            const wilaya = document.getElementById('checkout-wilaya')?.value;
-            if (wilaya && ZIMOU_DATA[wilaya]) {
+        if (wilaya && ZIMOU_DATA[wilaya]) {
+            if (selectedDelivery === 'domicile') {
                 shippingFee = Number(ZIMOU_DATA[wilaya].price);
-            }
-        } else if (deliveryType === 'stopdesk') {
-            const stopdeskOpt = stopdeskSelect?.options[stopdeskSelect.selectedIndex];
-            if (stopdeskOpt && stopdeskOpt.dataset.price) {
-                shippingFee = Number(stopdeskOpt.dataset.price);
+            } else if (selectedDelivery === 'stopdesk') {
+                shippingFee = Math.max(0, Number(ZIMOU_DATA[wilaya].price) - 200); // خصم 200 دج للمكتب
             }
         }
 
@@ -387,14 +382,16 @@
         return { subtotal, shippingFee, grandTotal };
     }
 
-    // إعداد واجهة التبديل بين المنزل والمكتب
+    // إعداد واجهة الولايات والبلديات والتبديل
     function setupWilayasAndCommunes() {
         const wSelect = document.getElementById('checkout-wilaya');
         const cSelect = document.getElementById('checkout-commune');
-        const typeSelect = document.getElementById('checkout-delivery-type');
-        const domContainer = document.getElementById('domicile-fields-container');
-        const stopContainer = document.getElementById('stopdesk-fields-container');
+        const addressContainer = document.getElementById('address-container');
         const addressInput = document.getElementById('checkout-address');
+        const deliveryOptionsContainer = document.getElementById('delivery-options-container');
+        const priceDomicile = document.getElementById('label-price-domicile');
+        const priceStopdesk = document.getElementById('label-price-stopdesk');
+        const deliveryRadios = document.querySelectorAll('input[name="delivery_type"]');
 
         if (!wSelect) return;
 
@@ -402,10 +399,11 @@
         Object.keys(ZIMOU_DATA).forEach(w => {
             const opt = document.createElement('option');
             opt.value = w;
-            opt.textContent = `${ZIMOU_DATA[w].id} - ${w} (${ZIMOU_DATA[w].price} DA)`;
+            opt.textContent = `${ZIMOU_DATA[w].id} - ${w}`;
             wSelect.appendChild(opt);
         });
 
+        // عند تغيير الولاية
         wSelect.onchange = function() {
             const selectedWilaya = this.value;
             cSelect.innerHTML = '<option value="" disabled selected>— Choisir la Commune —</option>';
@@ -418,37 +416,35 @@
                     cSelect.appendChild(opt);
                 });
                 cSelect.disabled = false;
+
+                // تحديث وإظهار أسعار التوصيل الخاصة بـ Zimou
+                const domicileFee = ZIMOU_DATA[selectedWilaya].price;
+                const stopdeskFee = Math.max(0, domicileFee - 200);
+
+                priceDomicile.textContent = `DA ${domicileFee}`;
+                priceStopdesk.textContent = `DA ${stopdeskFee}`;
+                deliveryOptionsContainer.style.display = 'block';
+
             } else {
                 cSelect.disabled = true;
+                deliveryOptionsContainer.style.display = 'none';
             }
             updatePricing();
         };
 
-        if(stopdeskSelect) stopdeskSelect.onchange = () => updatePricing();
-
-        // التبديل والإخفاء عند تغيير نوع التوصيل
-        if(typeSelect) {
-            typeSelect.onchange = () => {
-                if (typeSelect.value === 'stopdesk') {
-                    if(domContainer) domContainer.style.display = 'none';
-                    if(stopContainer) stopContainer.style.display = 'block';
-                    
-                    wSelect.removeAttribute('required');
-                    cSelect.removeAttribute('required');
-                    if(addressInput) addressInput.removeAttribute('required');
-                    if(stopdeskSelect) stopdeskSelect.setAttribute('required', 'true');
+        // التبديل بين المنزل والمكتب وإخفاء حقل العنوان
+        deliveryRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'stopdesk') {
+                    addressContainer.style.display = 'none';
+                    addressInput.removeAttribute('required');
                 } else {
-                    if(domContainer) domContainer.style.display = 'block';
-                    if(stopContainer) stopContainer.style.display = 'none';
-                    
-                    wSelect.setAttribute('required', 'true');
-                    cSelect.setAttribute('required', 'true');
-                    if(addressInput) addressInput.setAttribute('required', 'true');
-                    if(stopdeskSelect) stopdeskSelect.removeAttribute('required');
+                    addressContainer.style.display = 'block';
+                    addressInput.setAttribute('required', 'true');
                 }
                 updatePricing();
-            };
-        }
+            });
+        });
     }
 
     // هاتف 10 أرقام
@@ -482,21 +478,19 @@
                 }
             }
 
-            const deliveryType = document.getElementById('checkout-delivery-type').value;
-            let wilaya = '';
-            let commune = '';
-            let detailedAddress = '';
+            const deliveryType = document.querySelector('input[name="delivery_type"]:checked').value;
+            const wilaya = document.getElementById('checkout-wilaya').value;
+            const commune = document.getElementById('checkout-commune').value;
+            let detailedAddress = document.getElementById('checkout-address').value.trim();
 
-            if (deliveryType === 'domicile') {
-                wilaya = document.getElementById('checkout-wilaya').value;
-                commune = document.getElementById('checkout-commune').value;
-                detailedAddress = document.getElementById('checkout-address').value.trim();
-                if (!wilaya || !commune) return alert('❌ يرجى اختيار الولاية والبلدية.');
-            } else {
-                wilaya = document.getElementById('checkout-stopdesk-office').value;
-                commune = 'Stopdesk';
-                detailedAddress = `Bureau Zimou Express - ${wilaya}`;
-                if (!wilaya) return alert('❌ يرجى اختيار مكتب الاستلام.');
+            if (!wilaya || !commune) {
+                alert('❌ يرجى اختيار الولاية والبلدية.');
+                return;
+            }
+
+            // إذا كان التوصيل للمكتب، نتجاهل العنوان ونكتب Stopdesk
+            if (deliveryType === 'stopdesk') {
+                detailedAddress = `Bureau Zimou Express (Stopdesk) - ${commune}`;
             }
 
             let cart = [];
