@@ -331,12 +331,34 @@
         displayCartItems();
     };
 
+  // توليد مكاتب Stopdesk تلقائياً بناءً على بيانات الولايات
+    const stopdeskSelect = document.getElementById('checkout-stopdesk-office');
+    if (stopdeskSelect) {
+        Object.keys(ZIMOU_DATA).forEach(w => {
+            const opt = document.createElement('option');
+            opt.value = w;
+            const stopdeskPrice = Math.max(0, ZIMOU_DATA[w].price - 200); // سعر المكتب
+            opt.textContent = `${ZIMOU_DATA[w].id} - Bureau ${w} (${stopdeskPrice} DA)`;
+            opt.dataset.price = stopdeskPrice;
+            stopdeskSelect.appendChild(opt);
+        });
+    }
+
+    // دالة تحديث السعر
     function updatePricing(subtotalOverride) {
-        const wilaya = document.getElementById('checkout-wilaya')?.value;
+        const deliveryType = document.getElementById('checkout-delivery-type')?.value;
         let shippingFee = 0;
 
-        if (wilaya && ZIMOU_DATA[wilaya]) {
-            shippingFee = Number(ZIMOU_DATA[wilaya].price);
+        if (deliveryType === 'domicile') {
+            const wilaya = document.getElementById('checkout-wilaya')?.value;
+            if (wilaya && ZIMOU_DATA[wilaya]) {
+                shippingFee = Number(ZIMOU_DATA[wilaya].price);
+            }
+        } else if (deliveryType === 'stopdesk') {
+            const stopdeskOpt = stopdeskSelect?.options[stopdeskSelect.selectedIndex];
+            if (stopdeskOpt && stopdeskOpt.dataset.price) {
+                shippingFee = Number(stopdeskOpt.dataset.price);
+            }
         }
 
         let subtotal = 0;
@@ -354,16 +376,25 @@
 
         const grandTotal = subtotal + shippingFee;
 
-        document.getElementById('cart-total-price-page').textContent = subtotal.toLocaleString('fr-DZ');
-        document.getElementById('delivery-fee-display').textContent = shippingFee.toLocaleString('fr-DZ');
-        document.getElementById('final-total-price').textContent = grandTotal.toLocaleString('fr-DZ');
+        const totalEl = document.getElementById('cart-total-price-page');
+        const feeEl = document.getElementById('delivery-fee-display');
+        const finalEl = document.getElementById('final-total-price');
+
+        if(totalEl) totalEl.textContent = subtotal.toLocaleString('fr-DZ');
+        if(feeEl) feeEl.textContent = shippingFee.toLocaleString('fr-DZ');
+        if(finalEl) finalEl.textContent = grandTotal.toLocaleString('fr-DZ');
 
         return { subtotal, shippingFee, grandTotal };
     }
 
+    // إعداد واجهة التبديل بين المنزل والمكتب
     function setupWilayasAndCommunes() {
         const wSelect = document.getElementById('checkout-wilaya');
         const cSelect = document.getElementById('checkout-commune');
+        const typeSelect = document.getElementById('checkout-delivery-type');
+        const domContainer = document.getElementById('domicile-fields-container');
+        const stopContainer = document.getElementById('stopdesk-fields-container');
+        const addressInput = document.getElementById('checkout-address');
 
         if (!wSelect) return;
 
@@ -393,93 +424,129 @@
             updatePricing();
         };
 
-        document.getElementById('checkout-delivery-type').onchange = () => updatePricing();
+        if(stopdeskSelect) stopdeskSelect.onchange = () => updatePricing();
+
+        // التبديل والإخفاء عند تغيير نوع التوصيل
+        if(typeSelect) {
+            typeSelect.onchange = () => {
+                if (typeSelect.value === 'stopdesk') {
+                    if(domContainer) domContainer.style.display = 'none';
+                    if(stopContainer) stopContainer.style.display = 'block';
+                    
+                    wSelect.removeAttribute('required');
+                    cSelect.removeAttribute('required');
+                    if(addressInput) addressInput.removeAttribute('required');
+                    if(stopdeskSelect) stopdeskSelect.setAttribute('required', 'true');
+                } else {
+                    if(domContainer) domContainer.style.display = 'block';
+                    if(stopContainer) stopContainer.style.display = 'none';
+                    
+                    wSelect.setAttribute('required', 'true');
+                    cSelect.setAttribute('required', 'true');
+                    if(addressInput) addressInput.setAttribute('required', 'true');
+                    if(stopdeskSelect) stopdeskSelect.removeAttribute('required');
+                }
+                updatePricing();
+            };
+        }
     }
 
     // هاتف 10 أرقام
     const phoneInput = document.getElementById('checkout-phone');
-    phoneInput.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '');
-        const err = document.getElementById('phone-error-msg');
-        if (this.value.length > 0 && (this.value.length !== 10 || !/^(05|06|07)/.test(this.value))) {
-            err.style.display = 'block';
-            this.style.borderColor = '#f87171';
-        } else {
-            err.style.display = 'none';
-            this.style.borderColor = '';
-        }
-    });
+    if(phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            const err = document.getElementById('phone-error-msg');
+            if (this.value.length > 0 && (this.value.length !== 10 || !/^(05|06|07)/.test(this.value))) {
+                if(err) err.style.display = 'block';
+                this.style.borderColor = '#f87171';
+            } else {
+                if(err) err.style.display = 'none';
+                this.style.borderColor = '';
+            }
+        });
+    }
 
-    // إرسال وحفظ الطلب في Supabase
-    document.getElementById('checkout-form-page').onsubmit = async function(e) {
-        e.preventDefault();
+    // إرسال وحفظ الطلب
+    const checkoutForm = document.getElementById('checkout-form-page');
+    if(checkoutForm) {
+        checkoutForm.onsubmit = async function(e) {
+            e.preventDefault();
 
-        const phone = phoneInput.value.trim();
-        if (!/^(05|06|07)[0-9]{8}$/.test(phone)) {
-            alert('❌ رقم الهاتف غير صحيح! يجب أن يتكون من 10 أرقام بالضبط ويبدأ بـ 05 أو 06 أو 07.');
-            phoneInput.focus();
-            return;
-        }
-
-        const wilaya = document.getElementById('checkout-wilaya').value;
-        const commune = document.getElementById('checkout-commune').value;
-
-        if (!wilaya || !commune) {
-            alert('❌ يرجى اختيار الولاية والبلدية.');
-            return;
-        }
-
-        let cart = [];
-        try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) {}
-        if (!cart.length) {
-            alert('السلة فارغة!');
-            return;
-        }
-
-        const btn = document.getElementById('checkout-submit-btn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
-
-        const { shippingFee, grandTotal } = updatePricing();
-        const fName = document.getElementById('checkout-first-name').value.trim();
-        const lName = document.getElementById('checkout-last-name').value.trim();
-        const detailedAddress = document.getElementById('checkout-address').value.trim();
-
-        // إرسال معرف الولاية كرقم صحيح (1-58) لتوافق Supabase
-        const wilayaNumericId = ZIMOU_DATA[wilaya] ? ZIMOU_DATA[wilaya].id : 16;
-
-        const payload = {
-            first_name: fName,
-            last_name: lName,
-            customer_name: `${lName} ${fName}`,
-            customer_phone: phone,
-            wilaya_id: wilayaNumericId,
-            commune: commune,
-            customer_address: `${wilaya} - ${commune} - ${detailedAddress}`,
-            delivery_type: document.getElementById('checkout-delivery-type').value,
-            delivery_fee: shippingFee,
-            total_price: grandTotal,
-            items: cart,
-            status: 'Pending'
-        };
-
-        try {
-            const { data, error } = await supabaseClient.from('orders').insert([payload]).select();
-
-            if (error) {
-                console.error("Supabase error detail:", error);
-                throw error;
+            if(phoneInput) {
+                const phone = phoneInput.value.trim();
+                if (!/^(05|06|07)[0-9]{8}$/.test(phone)) {
+                    alert('❌ رقم الهاتف غير صحيح! يجب أن يتكون من 10 أرقام بالضبط ويبدأ بـ 05 أو 06 أو 07.');
+                    phoneInput.focus();
+                    return;
+                }
             }
 
-            localStorage.removeItem('icosium_cart');
-            document.getElementById('order-success-modal').style.display = 'flex';
-        } catch (err) {
-            console.error("Order error:", err);
-            alert("حدث خطأ أثناء حفظ الطلب: " + (err.message || "Erreur de base de données"));
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-shield-halved"></i> Confirmer la commande';
-        }
-    };
+            const deliveryType = document.getElementById('checkout-delivery-type').value;
+            let wilaya = '';
+            let commune = '';
+            let detailedAddress = '';
+
+            if (deliveryType === 'domicile') {
+                wilaya = document.getElementById('checkout-wilaya').value;
+                commune = document.getElementById('checkout-commune').value;
+                detailedAddress = document.getElementById('checkout-address').value.trim();
+                if (!wilaya || !commune) return alert('❌ يرجى اختيار الولاية والبلدية.');
+            } else {
+                wilaya = document.getElementById('checkout-stopdesk-office').value;
+                commune = 'Stopdesk';
+                detailedAddress = `Bureau Zimou Express - ${wilaya}`;
+                if (!wilaya) return alert('❌ يرجى اختيار مكتب الاستلام.');
+            }
+
+            let cart = [];
+            try { cart = JSON.parse(localStorage.getItem('icosium_cart')) || []; } catch(e) {}
+            if (!cart.length) return alert('السلة فارغة!');
+
+            const btn = document.getElementById('checkout-submit-btn');
+            if(btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+            }
+
+            const { shippingFee, grandTotal } = updatePricing();
+            const fName = document.getElementById('checkout-first-name').value.trim();
+            const lName = document.getElementById('checkout-last-name').value.trim();
+            const phoneVal = phoneInput ? phoneInput.value.trim() : '';
+            const wilayaNumericId = ZIMOU_DATA[wilaya] ? ZIMOU_DATA[wilaya].id : 16;
+
+            const payload = {
+                first_name: fName,
+                last_name: lName,
+                customer_name: `${lName} ${fName}`,
+                customer_phone: phoneVal,
+                wilaya_id: wilayaNumericId,
+                commune: commune,
+                customer_address: `${wilaya} - ${commune} - ${detailedAddress}`,
+                delivery_type: deliveryType,
+                delivery_fee: shippingFee,
+                total_price: grandTotal,
+                items: cart,
+                status: 'Pending'
+            };
+
+            try {
+                const { data, error } = await supabaseClient.from('orders').insert([payload]).select();
+                if (error) throw error;
+
+                localStorage.removeItem('icosium_cart');
+                const successModal = document.getElementById('order-success-modal');
+                if(successModal) successModal.style.display = 'flex';
+            } catch (err) {
+                console.error("Order error:", err);
+                alert("حدث خطأ أثناء حفظ الطلب.");
+                if(btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-shield-halved"></i> Confirmer la commande';
+                }
+            }
+        };
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         setupWilayasAndCommunes();
