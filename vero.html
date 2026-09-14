@@ -5411,6 +5411,16 @@ function generateWaLinks() {
 
   toast(`${clientsArr.length} lien(s) WhatsApp généré(s) !`, 'ok');
 } 
+   // دوال ذكية لفتح النوافذ باستخدام رقم الـ ID فقط (لمنع أخطاء الـ JSON)
+window.openOrderModalById = function(id) {
+  const order = allOrders.find(o => o.id === id);
+  if (order) openOrderModal(order);
+};
+
+window.openProductModalById = function(id) {
+  const prod = allProducts.find(p => p.id === id);
+  if (prod) openProductModal(prod);
+};
 </script>
 </body>
 
