@@ -3722,8 +3722,7 @@ function filterOrders(status, btnElement) {
 function searchOrders(q) {
   const base = currentOrderFilter === 'all' ? allOrders : allOrders.filter(o => o.status === currentOrderFilter);
   renderOrders(base.filter(o => o.customer_name?.toLowerCase().includes(q.toLowerCase()) || String(o.id).includes(q) || o.customer_phone?.includes(q)));
-}
-function openOrderModal(o) {
+}function openOrderModal(o) {
   if (!o) return;
   currentOrderId = o.id;
   const wilayaMap = Object.fromEntries((allWilayas || []).map(w => [w.id, w.name]));
@@ -3999,8 +3998,7 @@ function setProductView(v) {
 function filterProductsByCategory(catId) {
   const filtered = catId ? allProducts.filter(p => String(p.category_id) === String(catId)) : allProducts;
   renderProducts(filtered);
-}
-function renderProducts(products) {
+}function renderProducts(products) {
   const catMap = Object.fromEntries((allCategories || []).map(c => [c.id, c.name_fr || c.name_ar || '']));
   const grid = document.getElementById('products-view-grid');
   if (grid) {
