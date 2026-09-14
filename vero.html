@@ -2642,8 +2642,8 @@ function runGlobalSearch(q) {
 
   if (orders.length) {
     html += `<div class="global-result-group"><span class="global-result-label">Commandes</span>`;
-    html += orders.map(o => `<div class="global-result-item" onclick="closeGlobalSearch();goTo('orders',null);setTimeout(()=>openOrderModal(${JSON.stringify(o).replace(/'/g, "\\'")}),300)">
-      <div class="global-result-icon" style="background:rgba(59,130,246,.12);color:#60a5fa"><i class="fas fa-receipt"></i></div>
+html += orders.map(o => `<div class="global-result-item" onclick="closeGlobalSearch();goTo('orders',null);setTimeout(()=>openOrderModal(${JSON.stringify(o).replace(/'/g, "&#39;")}),300)">
+<div class="global-result-icon" style="background:rgba(59,130,246,.12);color:#60a5fa"><i class="fas fa-receipt"></i></div>
       <div class="global-result-info"><strong>#${o.id} — ${o.customer_name}</strong><span>${fmtPrice(o.total_price)} • ${statusPill(o.status)}</span></div>
     </div>`).join('');
     html += '</div>';
@@ -3664,8 +3664,8 @@ function renderOrders(orders) {
       <td style="color:var(--text3); font-size:0.75rem;">${dimensions}</td>
       <td>${statusPill(o.status)}</td>
    <td>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o)})' title="Détails de la commande">
+      <div style="display:flex; gap:6px; align-items:center;">
+          <button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o).replace(/'/g, "&#39;")})' title="Détails de la commande">
             <i class="fas fa-expand-alt"></i>
           </button>
           <button class="icn-btn" style="color:#60a5fa; border-color:rgba(96,165,250,0.3);" onclick="printZimouBordereau('${o.tracking_number || ''}', '${o.tracking_label_url || ''}', ${o.id})" title="Imprimer le Bordereau Zimou">
