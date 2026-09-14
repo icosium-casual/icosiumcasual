@@ -2640,17 +2640,17 @@ function runGlobalSearch(q) {
   const livreurs = allLivreurs.filter(l => l.name?.toLowerCase().includes(lq)).slice(0, 3);
   let html = '';
 
-  if (orders.length) {
+ if (orders.length) {
     html += `<div class="global-result-group"><span class="global-result-label">Commandes</span>`;
-html += orders.map(o => `<div class="global-result-item" onclick="closeGlobalSearch();goTo('orders',null);setTimeout(()=>openOrderModal(${JSON.stringify(o).replace(/'/g, "&#39;")}),300)">
-<div class="global-result-icon" style="background:rgba(59,130,246,.12);color:#60a5fa"><i class="fas fa-receipt"></i></div>
+    html += orders.map(o => `<div class="global-result-item" onclick="closeGlobalSearch();goTo('orders',null);setTimeout(()=>openOrderModalById(${o.id}),300)">
+      <div class="global-result-icon" style="background:rgba(59,130,246,.12);color:#60a5fa"><i class="fas fa-receipt"></i></div>
       <div class="global-result-info"><strong>#${o.id} — ${o.customer_name}</strong><span>${fmtPrice(o.total_price)} • ${statusPill(o.status)}</span></div>
     </div>`).join('');
     html += '</div>';
   }
   if (products.length) {
     html += `<div class="global-result-group"><span class="global-result-label">Produits</span>`;
-    html += products.map(p => `<div class="global-result-item" onclick="closeGlobalSearch();goTo('products',null);setTimeout(()=>openProductModal(${JSON.stringify(p).replace(/'/g, "\\'")}),300)">
+    html += products.map(p => `<div class="global-result-item" onclick="closeGlobalSearch();goTo('products',null);setTimeout(()=>openProductModalById(${p.id}),300)">
       <div class="global-result-icon" style="background:rgba(0,200,150,.12);color:var(--accent)">${p.image_url ? `<img src="${p.image_url}" style="width:36px;height:36px;border-radius:10px;object-fit:cover">` : '<i class="fas fa-box"></i>'}</div>
       <div class="global-result-info"><strong>${p.name}</strong><span>${fmtPrice(p.price)} • Stock: ${p.stock}</span></div>
     </div>`).join('');
@@ -3663,14 +3663,17 @@ function renderOrders(orders) {
       <td style="font-family:monospace; color:#60a5fa;">${tagSuivi}</td>
       <td style="color:var(--text3); font-size:0.75rem;">${dimensions}</td>
       <td>${statusPill(o.status)}</td>
-   <td>
-      <div style="display:flex; gap:6px; align-items:center;">
-          <button class="icn-btn g" onclick='openOrderModal(${JSON.stringify(o).replace(/'/g, "&#39;")})' title="Détails de la commande">
+<td>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <!-- لاحظ أننا نستخدم الآن openOrderModalById -->
+          <button class="icn-btn g" onclick="openOrderModalById(${o.id})" title="Détails de la commande">
             <i class="fas fa-expand-alt"></i>
           </button>
-          <button class="icn-btn" style="color:#60a5fa; border-color:rgba(96,165,250,0.3);" onclick="printZimouBordereau('${o.tracking_number || ''}', '${o.tracking_label_url || ''}', ${o.id})" title="Imprimer le Bordereau Zimou">
-            <i class="fas fa-file-pdf"></i>
-          </button>
+          ${(o.tracking_number || o.tracking_label_url) ? `
+            <button class="icn-btn" style="color:#60a5fa; border-color:rgba(96,165,250,0.3);" onclick="printZimouBordereau('${o.tracking_number || ''}', '${o.tracking_label_url || ''}', ${o.id})" title="Imprimer le Bordereau Zimou">
+              <i class="fas fa-file-pdf"></i>
+            </button>
+          ` : ''}
         </div>
       </td>
     </tr>`;
@@ -3993,8 +3996,11 @@ function renderProducts(products) {
             <div class="pcard-foot">
               <span class="stock-tag ${p.stock < 5 ? 'slow' : 'sok'}">${p.stock < 5 ? '⚠ ' + p.stock : '✓ ' + p.stock}</span>
               <div style="display:flex;gap:5px">
-                <button class="icn-btn g" onclick='openProductModal(${JSON.stringify(p)})'><i class="fas fa-edit"></i></button>
-                <button class="icn-btn r" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
+// الزر الخاص بـ Grid View
+<button class="icn-btn g" onclick="openProductModalById(${p.id})"><i class="fas fa-edit"></i></button>
+
+// الزر الخاص بـ Table View
+<button class="icn-btn g" onclick="openProductModalById(${p.id})"><i class="fas fa-edit"></i></button>                <button class="icn-btn r" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
               </div>
             </div>
           </div>
