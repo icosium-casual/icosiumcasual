@@ -3586,6 +3586,25 @@ function renderRecentOrders(orders) {
     <td style="color:var(--text3);font-size:.8rem">${fmtDate(o.created_at)}</td>
   </tr>`).join('');
 }
+   /* ─── OUVERTURE DES MODALS PAR ID (SÉCURISÉ) ─── */
+window.openOrderModalById = function(id) {
+  const order = allOrders.find(o => String(o.id) === String(id));
+  if (order) {
+    openOrderModal(order);
+  } else {
+    console.error("Commande introuvable avec l'ID:", id);
+    toast("Commande introuvable !", "err");
+  }
+};
+
+window.openProductModalById = function(id) {
+  const prod = allProducts.find(p => String(p.id) === String(id));
+  if (prod) {
+    openProductModal(prod);
+  } else {
+    toast("Produit introuvable !", "err");
+  }
+};
 /* ─── ORDERS TABLE (ZIMOU EXPRESS 21 FIELDS) ─── */
 function renderOrders(orders) {
   const el = document.getElementById('orders-body');
@@ -3704,33 +3723,38 @@ function searchOrders(q) {
   const base = currentOrderFilter === 'all' ? allOrders : allOrders.filter(o => o.status === currentOrderFilter);
   renderOrders(base.filter(o => o.customer_name?.toLowerCase().includes(q.toLowerCase()) || String(o.id).includes(q) || o.customer_phone?.includes(q)));
 }
-
 function openOrderModal(o) {
+  if (!o) return;
   currentOrderId = o.id;
-  const wilayaMap = Object.fromEntries(allWilayas.map(w => [w.id, w.name]));
-  const prodMap = Object.fromEntries(allProducts.map(p => [p.id, p]));
+  const wilayaMap = Object.fromEntries((allWilayas || []).map(w => [w.id, w.name]));
+  const prodMap = Object.fromEntries((allProducts || []).map(p => [p.id, p]));
 
   let wilayaDisplay = wilayaMap[o.wilaya_id] || '';
   if (!wilayaDisplay && o.customer_address) {
     const parts = o.customer_address.split('-');
-    if (parts.length > 1) {
-      wilayaDisplay = parts[1].trim();
-    } else {
-      wilayaDisplay = parts[0].trim();
-    }
+    wilayaDisplay = parts.length > 1 ? parts[1].trim() : parts[0].trim();
   }
 
-  document.getElementById('mod-ord-id').textContent = '#' + o.id;
-  document.getElementById('mod-client-name').textContent = o.customer_name || '—';
-  document.getElementById('mod-client-phone').textContent = o.customer_phone || '—';
-  document.getElementById('mod-client-addr').textContent = o.customer_address || '—';
-  document.getElementById('mod-total').textContent = fmtPrice(o.total_price);
-  document.getElementById('mod-fee').textContent = fmtPrice(o.delivery_fee || 0);
-  document.getElementById('mod-wilaya').textContent = wilayaDisplay || '—';
-  document.getElementById('mod-date').textContent = fmtDateTime(o.created_at);
-  document.getElementById('mod-status-sel').value = o.status;
-  document.getElementById('mod-livreur-sel').value = o.livreur_id || '';
-  document.getElementById('mod-note').value = o.note_admin || '';
+  const setSafeText = (id, txt) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  };
+  const setSafeVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+
+  setSafeText('mod-ord-id', '#' + o.id);
+  setSafeText('mod-client-name', o.customer_name || '—');
+  setSafeText('mod-client-phone', o.customer_phone || '—');
+  setSafeText('mod-client-addr', o.customer_address || '—');
+  setSafeText('mod-total', fmtPrice(o.total_price));
+  setSafeText('mod-fee', fmtPrice(o.delivery_fee || 0));
+  setSafeText('mod-wilaya', wilayaDisplay || '—');
+  setSafeText('mod-date', o.created_at ? fmtDateTime(o.created_at) : '—');
+  setSafeVal('mod-status-sel', o.status || 'Pending');
+  setSafeVal('mod-livreur-sel', o.livreur_id || '');
+  setSafeVal('mod-note', o.note_admin || '');
 
   let items = o.items;
   if (typeof items === 'string') {
@@ -3748,10 +3772,10 @@ function openOrderModal(o) {
             <tr>
               <td style="padding: 10px 0;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                  <img src="${imgUrl}" alt="${i.name}" style="width: 46px; height: 46px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0;" onerror="this.src='images/logo3.png'">
+                  <img src="${imgUrl}" alt="${i.name || ''}" style="width: 46px; height: 46px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0;" onerror="this.src='images/logo3.png'">
                   <div>
                     <strong style="display: block; font-size: 0.92rem; color: var(--text);">
-                      ${i.qty || 1}× ${i.name}
+                      ${i.qty || 1}× ${i.name || 'Article'}
                     </strong>
                     <div style="display: flex; gap: 6px; margin-top: 4px; font-size: 0.78rem;">
                       ${i.color && i.color !== 'Standard' ? `<span style="background: var(--bg4); border: 1px solid var(--border); padding: 1px 7px; border-radius: 6px; color: var(--text2);">اللون: <strong>${i.color}</strong></span>` : ''}
@@ -3768,6 +3792,7 @@ function openOrderModal(o) {
         }).join('') 
       : '<tr><td colspan="2" style="color:var(--text3);text-align:center;padding:14px">Aucun article</td></tr>';
   }
+
   // تعبئة حقل التتبع وتجهيز زر البوردروا
   const trackInput = document.getElementById('mod-tracking-input');
   if (trackInput) trackInput.value = o.tracking_number || '';
@@ -3779,6 +3804,7 @@ function openOrderModal(o) {
       printZimouBordereau(currentTrack, o.tracking_label_url, o.id);
     };
   }
+
   openModal('modal-order');
 }
 async function saveOrder() {
@@ -3974,9 +4000,8 @@ function filterProductsByCategory(catId) {
   const filtered = catId ? allProducts.filter(p => String(p.category_id) === String(catId)) : allProducts;
   renderProducts(filtered);
 }
-
 function renderProducts(products) {
-  const catMap = Object.fromEntries(allCategories.map(c => [c.id, c.name_fr || c.name_ar || '']));
+  const catMap = Object.fromEntries((allCategories || []).map(c => [c.id, c.name_fr || c.name_ar || '']));
   const grid = document.getElementById('products-view-grid');
   if (grid) {
     if (!products.length) { 
@@ -3996,11 +4021,8 @@ function renderProducts(products) {
             <div class="pcard-foot">
               <span class="stock-tag ${p.stock < 5 ? 'slow' : 'sok'}">${p.stock < 5 ? '⚠ ' + p.stock : '✓ ' + p.stock}</span>
               <div style="display:flex;gap:5px">
-// الزر الخاص بـ Grid View
-<button class="icn-btn g" onclick="openProductModalById(${p.id})"><i class="fas fa-edit"></i></button>
-
-// الزر الخاص بـ Table View
-<button class="icn-btn g" onclick="openProductModalById(${p.id})"><i class="fas fa-edit"></i></button>                <button class="icn-btn r" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
+                <button class="icn-btn g" onclick="openProductModalById(${p.id})"><i class="fas fa-edit"></i></button>
+                <button class="icn-btn r" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
               </div>
             </div>
           </div>
@@ -4018,10 +4040,11 @@ function renderProducts(products) {
       <td><span class="stock-tag ${p.stock < 5 ? 'slow' : 'sok'}">${p.stock}</span></td>
       <td style="color:var(--text2)">${catMap[p.category_id] || '—'}</td>
       <td>${p.is_featured ? '<span style="color:#fbbf24">⭐ Oui</span>' : '<span style="color:var(--text3)">Non</span>'}</td>
-      <td><div style="display:flex;gap:6px"><button class="icn-btn g" onclick='openProductModal(${JSON.stringify(p)})'><i class="fas fa-edit"></i></button><button class="icn-btn r" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button></div></td>
+      <td><div style="display:flex;gap:6px"><button class="icn-btn g" onclick="openProductModalById(${p.id})"><i class="fas fa-edit"></i></button><button class="icn-btn r" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button></div></td>
     </tr>`).join('');
   }
 }
+   
 
 function searchProducts(q) {
   const catId = document.getElementById('cat-filter-sel')?.value;
