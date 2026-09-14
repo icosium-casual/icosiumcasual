@@ -3778,19 +3778,12 @@ function openOrderModal(o) {
   }
   openModal('modal-order');
 }
-
 async function saveOrder() {
   const newStatus = document.getElementById('mod-status-sel').value;
   const livreurId = document.getElementById('mod-livreur-sel').value || null;
   const noteAdmin = document.getElementById('mod-note').value || null;
-const trackingInputVal = document.getElementById('mod-tracking-input')?.value.trim() || null;
+  const trackingInputVal = document.getElementById('mod-tracking-input')?.value.trim() || null;
 
-    const updatePayload = { 
-      status: newStatus, 
-      livreur_id: livreurId, 
-      note_admin: noteAdmin,
-      tracking_number: trackingInputVal || trackingCode
-    };
   try {
     const { data: order, error: fetchErr } = await dbFrom('orders').select('*').eq('id', currentOrderId).single();
     if (fetchErr || !order) {
@@ -3806,7 +3799,7 @@ const trackingInputVal = document.getElementById('mod-tracking-input')?.value.tr
       try { items = JSON.parse(items); } catch(e) { items = []; }
     }
 
-    // 1. حالة التأكيد: خصم المخزون
+    // 1. حالة التأكيد: خصم المخزون وإرسال لـ Zimou
     if (newStatus === 'Confirmed' && order.status !== 'Confirmed') {
       if (Array.isArray(items) && items.length > 0) {
         for (const item of items) {
@@ -3834,7 +3827,6 @@ const trackingInputVal = document.getElementById('mod-tracking-input')?.value.tr
         }
       }
 
-      // إرسال لـ Zimou
       if (!trackingCode && typeof ZR_API_TOKEN !== 'undefined' && ZR_API_TOKEN.trim() !== '') {
         const zrResult = await createZRColis(order);
         if (zrResult && zrResult.success) {
@@ -3854,7 +3846,7 @@ const trackingInputVal = document.getElementById('mod-tracking-input')?.value.tr
 
           const { data: prod } = await dbFrom('products').select('*').eq('id', pId).single();
           if (prod) {
-            const updatedStock = (parseInt(prod.stock, 10) || 0) + qty; // إرجاع الكمية
+            const updatedStock = (parseInt(prod.stock, 10) || 0) + qty; 
             let sizesArr = typeof prod.sizes === 'string' ? JSON.parse(prod.sizes || '[]') : (prod.sizes || []);
             
             if (Array.isArray(sizesArr) && sizesArr.length > 0) {
@@ -3874,10 +3866,17 @@ const trackingInputVal = document.getElementById('mod-tracking-input')?.value.tr
       toast('Stock retourné automatiquement suite à l\'annulation.', 'ok');
     }
 
-    // 3. تحديث الطلب
-    const updatePayload = { status: newStatus, livreur_id: livreurId, note_admin: noteAdmin };
-    if (trackingCode) {
-      updatePayload.tracking_number = trackingCode;
+    // 3. تحديث الطلب (هنا تم إصلاح خطأ الـ Payload)
+    const updatePayload = { 
+      status: newStatus, 
+      livreur_id: livreurId, 
+      note_admin: noteAdmin 
+    };
+    
+    // استخدام trackingInputVal إذا أدخله المستخدم يدوياً، أو trackingCode الموجود مسبقاً
+    const finalTracking = trackingInputVal || trackingCode;
+    if (finalTracking) {
+      updatePayload.tracking_number = finalTracking;
       updatePayload.tracking_label_url = labelUrl;
     }
 
