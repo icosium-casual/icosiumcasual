@@ -77,6 +77,7 @@
                         </div>
 
                         <!-- نوع الشحن -->
+                       <!-- نوع الشحن -->
                         <div class="checkout-field">
                             <label for="checkout-delivery-type">Type de livraison (طريقة الشحن) *</label>
                             <div class="input-wrapper">
@@ -88,37 +89,53 @@
                             </div>
                         </div>
 
-                        <!-- الولاية -->
-                        <div class="checkout-field">
-                            <label for="checkout-wilaya">Wilaya de livraison *</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-map-location-dot"></i>
-                                <select id="checkout-wilaya" required>
-                                    <option value="" disabled selected>— Choisir la Wilaya —</option>
-                                </select>
+                        <!-- 💡 حاوية التوصيل للمنزل (تختفي عند اختيار المكتب) 💡 -->
+                        <div id="domicile-fields-container">
+                            <!-- الولاية -->
+                            <div class="checkout-field">
+                                <label for="checkout-wilaya">Wilaya de livraison *</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-map-location-dot"></i>
+                                    <select id="checkout-wilaya" required>
+                                        <option value="" disabled selected>— Choisir la Wilaya —</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- البلدية -->
+                            <div class="checkout-field">
+                                <label for="checkout-commune">Commune (البلدية) *</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-city"></i>
+                                    <select id="checkout-commune" required disabled>
+                                        <option value="" disabled selected>— Sélectionnez d'abord une wilaya —</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- العنوان -->
+                            <div class="checkout-field">
+                                <label for="checkout-address">Adresse exacte (العنوان بالتفصيل) *</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-location-dot"></i>
+                                    <input type="text" id="checkout-address" required placeholder="Cité, N° de rue, Bâtiment...">
+                                </div>
                             </div>
                         </div>
 
-                        <!-- البلدية -->
-                        <div class="checkout-field">
-                            <label for="checkout-commune">Commune (البلدية) *</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-city"></i>
-                                <select id="checkout-commune" required disabled>
-                                    <option value="" disabled selected>— Sélectionnez d'abord une wilaya —</option>
-                                </select>
+                        <!-- 💡 حاوية مكاتب التوصيل (تظهر فقط عند اختيار Stopdesk) 💡 -->
+                        <div id="stopdesk-fields-container" style="display: none;">
+                            <div class="checkout-field">
+                                <label for="checkout-stopdesk-office">Bureau Zimou Express (المكتب) *</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-store"></i>
+                                    <select id="checkout-stopdesk-office">
+                                        <option value="" disabled selected>— Choisir le bureau Zimou le plus proche —</option>
+                                        <!-- سيتم ملؤها بالجافاسكربت -->
+                                    </select>
+                                </div>
                             </div>
                         </div>
-
-                        <!-- العنوان -->
-                        <div class="checkout-field">
-                            <label for="checkout-address">Adresse exacte (العنوان بالتفصيل) *</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-location-dot"></i>
-                                <input type="text" id="checkout-address" required placeholder="Cité, N° de rue, Bâtiment...">
-                            </div>
-                        </div>
-
                         <div class="checkout-divider"></div>
 
                         <!-- المجموع والأسعار -->
