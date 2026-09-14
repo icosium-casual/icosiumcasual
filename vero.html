@@ -3807,10 +3807,15 @@ function searchOrders(q) {
   openModal('modal-order');
 }
 async function saveOrder() {
-  const newStatus = document.getElementById('mod-status-sel').value;
-  const livreurId = document.getElementById('mod-livreur-sel').value || null;
-  const noteAdmin = document.getElementById('mod-note').value || null;
-  const trackingInputVal = document.getElementById('mod-tracking-input')?.value.trim() || null;
+  const statusSel = document.getElementById('mod-status-sel');
+  const livreurSel = document.getElementById('mod-livreur-sel');
+  const noteEl = document.getElementById('mod-note');
+  const trackInput = document.getElementById('mod-tracking-input');
+
+  const newStatus = statusSel ? statusSel.value : 'Pending';
+  const livreurId = (livreurSel && livreurSel.value) ? livreurSel.value : null;
+  const noteAdmin = noteEl ? noteEl.value : null;
+  const trackingInputVal = (trackInput && trackInput.value.trim() !== '') ? trackInput.value.trim() : null;
 
   try {
     const { data: order, error: fetchErr } = await dbFrom('orders').select('*').eq('id', currentOrderId).single();
@@ -3819,7 +3824,7 @@ async function saveOrder() {
       return;
     }
 
-    let trackingCode = order.tracking_number || null;
+    let trackingCode = trackingInputVal || order.tracking_number || null;
     let labelUrl = order.tracking_label_url || null;
 
     let items = order.items;
@@ -3827,7 +3832,7 @@ async function saveOrder() {
       try { items = JSON.parse(items); } catch(e) { items = []; }
     }
 
-    // 1. حالة التأكيد: خصم المخزون وإرسال لـ Zimou
+    // 1. حالة التأكيد: خصم المخزون ومحاولة إرسال الطرد لـ Zimou إن توفر الرمز البرمجي
     if (newStatus === 'Confirmed' && order.status !== 'Confirmed') {
       if (Array.isArray(items) && items.length > 0) {
         for (const item of items) {
@@ -3855,16 +3860,21 @@ async function saveOrder() {
         }
       }
 
-      if (!trackingCode && typeof ZR_API_TOKEN !== 'undefined' && ZR_API_TOKEN.trim() !== '') {
-        const zrResult = await createZRColis(order);
-        if (zrResult && zrResult.success) {
-          trackingCode = zrResult.tracking;
-          labelUrl = zrResult.labelUrl;
-          toast(`Colis envoyé à Zimou ! Suivi: ${trackingCode}`, 'ok');
+      // الاتصال بـ Zimou اختياري تماماً ولا يعطل الحفظ إذا كان الرمز غير مفعّل أو فشل الطلب
+      if (!trackingCode && typeof ZR_API_TOKEN !== 'undefined' && ZR_API_TOKEN.trim() !== '' && ZR_API_TOKEN !== 'YOUR_ZR_EXPRESS_API_TOKEN_HERE') {
+        try {
+          const zrResult = await createZRColis(order);
+          if (zrResult && zrResult.success) {
+            trackingCode = zrResult.tracking;
+            labelUrl = zrResult.labelUrl;
+            toast(`Colis synchronisé avec Zimou !`, 'ok');
+          }
+        } catch(zrErr) {
+          console.warn("Zimou sync bypassed:", zrErr);
         }
       }
     } 
-    // 2. حالة الإلغاء (Retour): إرجاع المخزون
+    // 2. حالة الإلغاء: إرجاع المخزون تلقائياً
     else if (newStatus === 'Cancelled' && order.status === 'Confirmed') {
       if (Array.isArray(items) && items.length > 0) {
         for (const item of items) {
@@ -3874,7 +3884,7 @@ async function saveOrder() {
 
           const { data: prod } = await dbFrom('products').select('*').eq('id', pId).single();
           if (prod) {
-            const updatedStock = (parseInt(prod.stock, 10) || 0) + qty; 
+            const updatedStock = (parseInt(prod.stock, 10) || 0) + qty;
             let sizesArr = typeof prod.sizes === 'string' ? JSON.parse(prod.sizes || '[]') : (prod.sizes || []);
             
             if (Array.isArray(sizesArr) && sizesArr.length > 0) {
@@ -3894,33 +3904,29 @@ async function saveOrder() {
       toast('Stock retourné automatiquement suite à l\'annulation.', 'ok');
     }
 
-    // 3. تحديث الطلب (هنا تم إصلاح خطأ الـ Payload)
-    const updatePayload = { 
-      status: newStatus, 
-      livreur_id: livreurId, 
-      note_admin: noteAdmin 
+    // 3. تجهيز بيانات التحديث والحفظ دون أي اشتراط على رقم التتبع
+    const updatePayload = {
+      status: newStatus,
+      livreur_id: livreurId,
+      note_admin: noteAdmin,
+      tracking_number: trackingCode,
+      tracking_label_url: labelUrl
     };
-    
-    // استخدام trackingInputVal إذا أدخله المستخدم يدوياً، أو trackingCode الموجود مسبقاً
-    const finalTracking = trackingInputVal || trackingCode;
-    if (finalTracking) {
-      updatePayload.tracking_number = finalTracking;
-      updatePayload.tracking_label_url = labelUrl;
-    }
 
     const { error: updateErr } = await dbFrom('orders').update(updatePayload).eq('id', currentOrderId);
 
     if (!updateErr) {
-      toast('Commande mise à jour avec succès !');
-      logAudit('order', `Commande #${currentOrderId} → ${newStatus}`, 'order');
+      toast('Commande enregistrée avec succès !', 'ok');
+      logAudit('order', `Commande #${currentOrderId} mise à jour → ${newStatus}`, 'order');
       closeModal('modal-order'); 
       await loadAll();
     } else {
-      toast('Erreur lors de la mise à jour.', 'err');
+      console.error("Supabase Error:", updateErr);
+      toast('Erreur lors de la mise à jour: ' + updateErr.message, 'err');
     }
   } catch (err) {
     console.error("Erreur saveOrder:", err);
-    toast("Une erreur est survenue.", 'err');
+    toast("Une erreur est survenue lors de l'enregistrement.", 'err');
   }
 }
    // ─── إعدادات ربط منصة ZR Express ───
