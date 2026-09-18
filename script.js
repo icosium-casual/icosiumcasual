@@ -137,7 +137,7 @@ const wilayasData = [
     { id: 58, name: "In Guezzam", price: 1600 }
 ];
 // ⚡ عرض فوري للمنتجات من الكاش في أجزاء من الثانية دون أي انتظار
-(function renderInstantCache() {
+function renderInstantCache() {
     try {
         const cached = localStorage.getItem('icosium_cached_products');
         if (cached) {
@@ -150,7 +150,7 @@ const wilayasData = [
             }
         }
     } catch (e) {}
-})();
+}
 // ─── إدارة السلة ───
 function loadCartFromStorage() {
     try {
