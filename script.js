@@ -136,21 +136,6 @@ const wilayasData = [
     { id: 55, name: "Touggourt", price: 1000 }, { id: 56, name: "Djanet", price: 1600 }, { id: 57, name: "In Salah", price: 1400 },
     { id: 58, name: "In Guezzam", price: 1600 }
 ];
-// ⚡ عرض فوري للمنتجات من الكاش في أجزاء من الثانية دون أي انتظار
-function renderInstantCache() {
-    try {
-        const cached = localStorage.getItem('icosium_cached_products');
-        if (cached) {
-            const products = JSON.parse(cached);
-            // إذا كانت حاوية المنتجات موجودة نرسمها فوراً
-            const grid = document.getElementById('products-grid');
-            if (grid && products.length > 0) {
-                allProducts = products;
-                renderProducts(products);
-            }
-        }
-    } catch (e) {}
-}
 // ─── إدارة السلة ───
 function loadCartFromStorage() {
     try {
