@@ -205,28 +205,31 @@ function checkIsComingSoon(product) {
     return target > now;
 }
 
+// 1. جلب البيانات المتوازي الذكي
 async function loadInitialData() {
-    // 1. قراءة الكاش فوراً إن وجد
-    const cached = localStorage.getItem('icosium_cached_products');
-    if (cached) {
+    // محاولة قراءة الكاش أولاً لظهور المنتجات فوراً دون أي ثانية انتظار
+    const cachedProducts = localStorage.getItem('icosium_cached_products');
+    if (cachedProducts) {
         try {
-            allProducts = JSON.parse(cached);
+            allProducts = JSON.parse(cachedProducts);
             renderProducts(allProducts);
         } catch(e) {}
     }
 
-    // 2. تحديث المنتجات والفئات أولاً بأول بأقصى سرعة
-    await Promise.all([
-        getCategories(),
-        getProducts()
-    ]);
+    try {
+        // تنفيذ كافة الطلبات معاً في نفس اللحظة بطلب شبكة واحد متزامن
+        await Promise.all([
+            getCategories(),
+            getProducts(),
+            getReviews()
+        ]);
+    } catch (err) {
+        console.error("Erreur de chargement des données:", err);
+    }
 
     setLanguage(currentLanguage);
     const savedTheme = localStorage.getItem('icosium_theme') || 'dark';
     applyTheme(savedTheme);
-
-    // 3. جلب الآراء في الخلفية دون تعطيل واجهة المنتجات
-    getReviews();
 }
 
 async function getCategories() {
