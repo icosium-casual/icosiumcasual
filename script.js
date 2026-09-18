@@ -191,11 +191,28 @@ function checkIsComingSoon(product) {
     return target > now;
 }
 
-// ─── جلب البيانات ───
+// 1. جلب البيانات المتوازي الذكي
 async function loadInitialData() {
-    await getCategories();
-    await getProducts();
-    await getReviews();
+    // محاولة قراءة الكاش أولاً لظهور المنتجات فوراً دون أي ثانية انتظار
+    const cachedProducts = localStorage.getItem('icosium_cached_products');
+    if (cachedProducts) {
+        try {
+            allProducts = JSON.parse(cachedProducts);
+            renderProducts(allProducts);
+        } catch(e) {}
+    }
+
+    try {
+        // تنفيذ كافة الطلبات معاً في نفس اللحظة بطلب شبكة واحد متزامن
+        await Promise.all([
+            getCategories(),
+            getProducts(),
+            getReviews()
+        ]);
+    } catch (err) {
+        console.error("Erreur de chargement des données:", err);
+    }
+
     setLanguage(currentLanguage);
     const savedTheme = localStorage.getItem('icosium_theme') || 'dark';
     applyTheme(savedTheme);
@@ -241,10 +258,11 @@ async function getCategories() {
     });
 }
 
+// 2. استعلام سريع ومحدد للمنتجات مع حفظ الكاش
 async function getProducts() {
     const { data: products, error } = await supabaseClient
         .from('products')
-        .select('*')
+        .select('id, name, price, compare_at_price, compare_price, stock, image_url, extra_images, category_id, is_coming_soon, available_at, description, sizes')
         .eq('is_deleted', false)
         .order('id', { ascending: false });
 
@@ -252,7 +270,10 @@ async function getProducts() {
         console.error("Error loading products:", error);
         return;
     }
+
     allProducts = products || [];
+    // حفظ النسخة الجديدة في الكاش للزيارات القادمة
+    localStorage.setItem('icosium_cached_products', JSON.stringify(allProducts));
     renderProducts(allProducts);
 }
 
@@ -1092,7 +1113,10 @@ async function registerVisit() {
 }
 
 // تنفيذ الدالة عند تحميل الصفحة
-window.addEventListener('DOMContentLoaded', registerVisit);
+// تشغيل تسجيل الزيارة في الخلفية بعد ثانيتين من اكتمال تحميل الصفحة
+window.addEventListener('load', () => {
+    setTimeout(registerVisit, 2000);
+});
 window.closeSizeGuide = function() {
     const modal = document.getElementById('size-guide-modal');
     if (modal) modal.style.display = 'none';
