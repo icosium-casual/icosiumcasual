@@ -116,7 +116,16 @@
           </div>
             
           <div id="categories-filter"></div>
-          <div id="products-grid"></div>
+       <div id="products-grid">
+    <!-- يظهر هذا الهيكل فور فتح الصفحة ويختفي تلقائياً بمجرد وصول البيانات -->
+    <div class="product-card" style="opacity: 0.35; pointer-events: none;">
+        <div style="height: 280px; background: var(--color-border); border-radius: 12px;"></div>
+        <div class="product-details">
+            <div style="height: 18px; width: 70%; background: var(--color-border); border-radius: 6px; margin-bottom: 10px;"></div>
+            <div style="height: 22px; width: 40%; background: var(--color-border); border-radius: 6px;"></div>
+        </div>
+    </div>
+</div>
         </section>
 
         <!-- ABOUT -->
