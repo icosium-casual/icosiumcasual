@@ -136,7 +136,21 @@ const wilayasData = [
     { id: 55, name: "Touggourt", price: 1000 }, { id: 56, name: "Djanet", price: 1600 }, { id: 57, name: "In Salah", price: 1400 },
     { id: 58, name: "In Guezzam", price: 1600 }
 ];
-
+// ⚡ عرض فوري للمنتجات من الكاش في أجزاء من الثانية دون أي انتظار
+(function renderInstantCache() {
+    try {
+        const cached = localStorage.getItem('icosium_cached_products');
+        if (cached) {
+            const products = JSON.parse(cached);
+            // إذا كانت حاوية المنتجات موجودة نرسمها فوراً
+            const grid = document.getElementById('products-grid');
+            if (grid && products.length > 0) {
+                allProducts = products;
+                renderProducts(products);
+            }
+        }
+    } catch (e) {}
+})();
 // ─── إدارة السلة ───
 function loadCartFromStorage() {
     try {
@@ -191,31 +205,28 @@ function checkIsComingSoon(product) {
     return target > now;
 }
 
-// 1. جلب البيانات المتوازي الذكي
 async function loadInitialData() {
-    // محاولة قراءة الكاش أولاً لظهور المنتجات فوراً دون أي ثانية انتظار
-    const cachedProducts = localStorage.getItem('icosium_cached_products');
-    if (cachedProducts) {
+    // 1. قراءة الكاش فوراً إن وجد
+    const cached = localStorage.getItem('icosium_cached_products');
+    if (cached) {
         try {
-            allProducts = JSON.parse(cachedProducts);
+            allProducts = JSON.parse(cached);
             renderProducts(allProducts);
         } catch(e) {}
     }
 
-    try {
-        // تنفيذ كافة الطلبات معاً في نفس اللحظة بطلب شبكة واحد متزامن
-        await Promise.all([
-            getCategories(),
-            getProducts(),
-            getReviews()
-        ]);
-    } catch (err) {
-        console.error("Erreur de chargement des données:", err);
-    }
+    // 2. تحديث المنتجات والفئات أولاً بأول بأقصى سرعة
+    await Promise.all([
+        getCategories(),
+        getProducts()
+    ]);
 
     setLanguage(currentLanguage);
     const savedTheme = localStorage.getItem('icosium_theme') || 'dark';
     applyTheme(savedTheme);
+
+    // 3. جلب الآراء في الخلفية دون تعطيل واجهة المنتجات
+    getReviews();
 }
 
 async function getCategories() {
