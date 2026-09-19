@@ -2016,8 +2016,7 @@ a { text-decoration: none; }
 </div><!-- end app -->
 
 <!-- ═══════ MODALS ═══════ -->
-
-<!-- Order Detail -->
+<!-- Order Detail (Modifiable + Free Shipping Button) -->
 <div class="modal-overlay" id="modal-order">
   <div class="modal-box modal-lg">
     <div class="modal-hdr">
@@ -2025,26 +2024,83 @@ a { text-decoration: none; }
       <button class="modal-close" onclick="closeModal('modal-order')"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body">
-      <div class="order-detail-grid">
-        <div class="detail-block">
-          <h4><i class="fas fa-user"></i> Client</h4>
-          <p id="mod-client-name" style="font-weight:700"></p>
-          <p id="mod-client-phone" style="color:var(--text2)"></p>
-          <p id="mod-client-addr" style="color:var(--text3);font-size:.82rem;margin-top:4px"></p>
+      <!-- 1. تعديل بيانات الزبون والشحن -->
+      <div style="background:var(--bg3); border-radius:14px; padding:16px; margin-bottom:18px;">
+        <h4 style="font-size:.75rem; text-transform:uppercase; letter-spacing:.1em; color:var(--text3); font-weight:800; margin-bottom:12px; display:flex; align-items:center; gap:7px;">
+          <i class="fas fa-user-edit" style="color:var(--accent);"></i> Informations Client & Livraison
+        </h4>
+        <div class="form-row form-row-2">
+          <div class="fg">
+            <label>Nom & Prénom</label>
+            <input type="text" id="mod-client-name-inp" placeholder="Nom complet">
+          </div>
+          <div class="fg">
+            <label>Téléphone</label>
+            <input type="tel" id="mod-client-phone-inp" placeholder="0555 000 000">
+          </div>
         </div>
-        <div class="detail-block">
-          <h4><i class="fas fa-info-circle"></i> Détails</h4>
-          <p>Total : <strong id="mod-total" style="color:var(--accent)"></strong></p>
-          <p>Livraison : <strong id="mod-fee"></strong></p>
-          <p>Wilaya : <span id="mod-wilaya" style="color:var(--text2)"></span></p>
-          <p style="font-size:.8rem;color:var(--text3);margin-top:6px" id="mod-date"></p>
+        <div class="form-row form-row-2">
+          <div class="fg">
+            <label>Wilaya</label>
+            <select id="mod-client-wilaya-sel" onchange="onModalWilayaChange()"></select>
+          </div>
+          <div class="fg">
+            <label>Adresse Complète</label>
+            <input type="text" id="mod-client-addr-inp" placeholder="Commune, Cité, Rue...">
+          </div>
         </div>
       </div>
-      <div class="detail-block" style="margin-bottom:18px">
-        <h4><i class="fas fa-shopping-basket"></i> Articles</h4>
-        <table class="items-tbl" id="mod-items" style="margin-top:10px"></table>
+
+      <!-- 2. جدول تعديل منتجات الطلبية -->
+      <div style="background:var(--bg3); border-radius:14px; padding:16px; margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h4 style="font-size:.75rem; text-transform:uppercase; letter-spacing:.1em; color:var(--text3); font-weight:800; margin:0; display:flex; align-items:center; gap:7px;">
+            <i class="fas fa-shopping-basket" style="color:var(--accent);"></i> Articles & Tailles
+          </h4>
+          <span style="font-size:.75rem; color:var(--text3);">Modifiez les quantités ou supprimez des articles</span>
+        </div>
+        <div class="tbl-wrap">
+          <table class="pro-table" style="font-size:.85rem; width:100%;">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Taille</th>
+                <th>Couleur</th>
+                <th style="width:90px;">Qté</th>
+                <th style="width:110px;">Prix Unit.</th>
+                <th style="width:110px; text-align:right;">Sous-total</th>
+                <th style="width:40px;"></th>
+              </tr>
+            </thead>
+            <tbody id="mod-items-editable-body"></tbody>
+          </table>
+        </div>
       </div>
-     <!-- حقل رقم التتبع Zimou المضاف -->
+
+      <!-- 3. شريط التحكم في الشحن والمجاميع وزر التوصيل المجاني -->
+      <div style="background:var(--bg2); border:1.5px solid var(--border); border-radius:14px; padding:16px; margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <button type="button" class="btn btn-sm" id="btn-toggle-free-shipping" onclick="toggleModalFreeShipping()" style="background:rgba(0,200,150,.15); color:var(--accent); border:1.5px solid var(--accent); font-weight:800;">
+              <i class="fas fa-gift"></i> Livraison Gratuite
+            </button>
+            <span id="mod-shipping-status-txt" style="font-size:.8rem; color:var(--text3);"></span>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:18px; margin-left:auto;">
+            <div style="text-align:right;">
+              <span style="font-size:.72rem; color:var(--text3); text-transform:uppercase; display:block;">Frais Livraison</span>
+              <strong id="mod-calc-fee" style="font-size:1rem; color:var(--text);">0 DA</strong>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:.72rem; color:var(--text3); text-transform:uppercase; display:block;">Total à Payer</span>
+              <strong id="mod-calc-total" style="font-size:1.3rem; color:var(--accent); font-weight:900;">0 DA</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. تتبع Zimou والحالة والملاحظات -->
       <div class="form-row form-row-2" style="margin-bottom:16px">
         <div class="fg">
           <label>N° de Suivi Zimou (Tracking)</label>
@@ -2073,7 +2129,7 @@ a { text-decoration: none; }
       </button>
       <button class="btn btn-ghost" onclick="printOrderDetail()"><i class="fas fa-print"></i> Imprimer Commande</button>
       <button class="btn btn-ghost" onclick="closeModal('modal-order')">Fermer</button>
-      <button class="btn btn-accent" onclick="saveOrder()"><i class="fas fa-save"></i> Enregistrer</button>
+      <button class="btn btn-accent" onclick="saveOrder()"><i class="fas fa-save"></i> Enregistrer les modifications</button>
     </div>
   </div>
 </div>
@@ -3722,100 +3778,234 @@ function filterOrders(status, btnElement) {
 function searchOrders(q) {
   const base = currentOrderFilter === 'all' ? allOrders : allOrders.filter(o => o.status === currentOrderFilter);
   renderOrders(base.filter(o => o.customer_name?.toLowerCase().includes(q.toLowerCase()) || String(o.id).includes(q) || o.customer_phone?.includes(q)));
-}function openOrderModal(o) {
+}
+  /* ═══════════════════════════════════════════════════════
+   ORDER EDITING & FREE SHIPPING LOGIC (DYNAMIC)
+═══════════════════════════════════════════════════════ */
+
+let currentOrderEditingItems = [];
+let originalDeliveryFee = 0;
+let isFreeShippingActive = false;
+
+function openOrderModal(o) {
   if (!o) return;
   currentOrderId = o.id;
-  const wilayaMap = Object.fromEntries((allWilayas || []).map(w => [w.id, w.name]));
-  const prodMap = Object.fromEntries((allProducts || []).map(p => [p.id, p]));
 
-  let wilayaDisplay = wilayaMap[o.wilaya_id] || '';
-  if (!wilayaDisplay && o.customer_address) {
-    const parts = o.customer_address.split('-');
-    wilayaDisplay = parts.length > 1 ? parts[1].trim() : parts[0].trim();
-  }
-
-  const setSafeText = (id, txt) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = txt;
-  };
-  const setSafeVal = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
-  };
-
-  setSafeText('mod-ord-id', '#' + o.id);
-  setSafeText('mod-client-name', o.customer_name || '—');
-  setSafeText('mod-client-phone', o.customer_phone || '—');
-  setSafeText('mod-client-addr', o.customer_address || '—');
-  setSafeText('mod-total', fmtPrice(o.total_price));
-  setSafeText('mod-fee', fmtPrice(o.delivery_fee || 0));
-  setSafeText('mod-wilaya', wilayaDisplay || '—');
-  setSafeText('mod-date', o.created_at ? fmtDateTime(o.created_at) : '—');
-  setSafeVal('mod-status-sel', o.status || 'Pending');
-  setSafeVal('mod-livreur-sel', o.livreur_id || '');
-  setSafeVal('mod-note', o.note_admin || '');
-
+  // 1. استخراج عناصر الطلبية القابلة للتعديل
   let items = o.items;
   if (typeof items === 'string') {
     try { items = JSON.parse(items); } catch (e) { items = []; }
   }
+  currentOrderEditingItems = Array.isArray(items) ? JSON.parse(JSON.stringify(items)) : [];
 
-  const tbl = document.getElementById('mod-items');
-  if (tbl) {
-    tbl.innerHTML = (Array.isArray(items) && items.length) 
-      ? items.map(i => {
-          const matchedProd = prodMap[i.product_id];
-          const imgUrl = i.image_url || matchedProd?.image_url || 'images/logo3.png';
+  // 2. فحص هل الشحن مجاني مسبقاً
+  originalDeliveryFee = parseFloat(o.delivery_fee || 0);
+  isFreeShippingActive = (o.free_shipping === true || originalDeliveryFee === 0);
 
-          return `
-            <tr>
-              <td style="padding: 10px 0;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <img src="${imgUrl}" alt="${i.name || ''}" style="width: 46px; height: 46px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0;" onerror="this.src='images/logo3.png'">
-                  <div>
-                    <strong style="display: block; font-size: 0.92rem; color: var(--text);">
-                      ${i.qty || 1}× ${i.name || 'Article'}
-                    </strong>
-                    <div style="display: flex; gap: 6px; margin-top: 4px; font-size: 0.78rem;">
-                      ${i.color && i.color !== 'Standard' ? `<span style="background: var(--bg4); border: 1px solid var(--border); padding: 1px 7px; border-radius: 6px; color: var(--text2);">اللون: <strong>${i.color}</strong></span>` : ''}
-                      ${i.size && i.size !== 'Standard' ? `<span style="background: var(--accent-dim); border: 1px solid rgba(0,200,150,.3); padding: 1px 7px; border-radius: 6px; color: var(--accent);">المقاس: <strong>${i.size}</strong></span>` : ''}
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td style="text-align: right; font-weight: 700; color: var(--accent); white-space: nowrap;">
-                ${fmtPrice(i.price)}
-              </td>
-            </tr>
-          `;
-        }).join('') 
-      : '<tr><td colspan="2" style="color:var(--text3);text-align:center;padding:14px">Aucun article</td></tr>';
+  // 3. ملء بيانات الزبون في الحقول
+  document.getElementById('mod-ord-id').textContent = '#' + o.id;
+  document.getElementById('mod-client-name-inp').value = o.customer_name || '';
+  document.getElementById('mod-client-phone-inp').value = o.customer_phone || '';
+  document.getElementById('mod-client-addr-inp').value = o.customer_address || '';
+  document.getElementById('mod-status-sel').value = o.status || 'Pending';
+  document.getElementById('mod-note').value = o.note_admin || '';
+  document.getElementById('mod-tracking-input').value = o.tracking_number || '';
+
+  // 4. تعبئة قائمة الولايات
+  const wilayaSel = document.getElementById('mod-client-wilaya-sel');
+  if (wilayaSel) {
+    wilayaSel.innerHTML = '<option value="">— Sélectionner Wilaya —</option>' + (allWilayas || []).map(w => `
+      <option value="${w.id}" data-price="${w.delivery_price || 0}" ${String(w.id) === String(o.wilaya_id) ? 'selected' : ''}>
+        ${w.id} - ${w.name} (${w.delivery_price || 0} DA)
+      </option>
+    `).join('');
   }
 
-  // تعبئة حقل التتبع وتجهيز زر البوردروا
-  const trackInput = document.getElementById('mod-tracking-input');
-  if (trackInput) trackInput.value = o.tracking_number || '';
-
+  // 5. ربط زر البوردروا
   const bordereauBtn = document.getElementById('btn-print-bordereau');
   if (bordereauBtn) {
     bordereauBtn.onclick = () => {
-      const currentTrack = trackInput ? trackInput.value.trim() : (o.tracking_number || '');
-      printZimouBordereau(currentTrack, o.tracking_label_url, o.id);
+      const trackVal = document.getElementById('mod-tracking-input')?.value.trim() || o.tracking_number;
+      printZimouBordereau(trackVal, o.tracking_label_url, o.id);
     };
   }
 
+  // 6. رسم جدول المنتجات وحساب المجاميع
+  renderModalEditableItems();
+  recalculateModalOrderTotals();
   openModal('modal-order');
 }
+
+// رسم أسطر المنتجات القابلة للتعديل
+function renderModalEditableItems() {
+  const tbody = document.getElementById('mod-items-editable-body');
+  if (!tbody) return;
+
+  if (!currentOrderEditingItems.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text3); padding:16px;">Aucun article dans cette commande</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = currentOrderEditingItems.map((it, idx) => {
+    const unitPrice = parseFloat(it.price || it.unit_price || 0);
+    const qty = parseInt(it.qty || it.quantity || 1, 10);
+    const subtotal = unitPrice * qty;
+
+    return `
+      <tr>
+        <td style="font-weight:700; color:var(--text);">
+          <input type="text" value="${it.name || ''}" onchange="updateOrderItemField(${idx}, 'name', this.value)" style="width:100%; font-weight:bold; background:var(--input-bg); border:1px solid var(--border); border-radius:6px; padding:4px 8px; color:var(--text);">
+        </td>
+        <td>
+          <input type="text" value="${it.size || 'M'}" onchange="updateOrderItemField(${idx}, 'size', this.value)" style="width:65px; text-align:center; background:var(--input-bg); border:1px solid var(--border); border-radius:6px; padding:4px; color:var(--text);">
+        </td>
+        <td>
+          <input type="text" value="${it.color || 'Standard'}" onchange="updateOrderItemField(${idx}, 'color', this.value)" style="width:85px; text-align:center; background:var(--input-bg); border:1px solid var(--border); border-radius:6px; padding:4px; color:var(--text);">
+        </td>
+        <td>
+          <input type="number" min="1" max="99" value="${qty}" oninput="updateOrderItemQty(${idx}, this.value)" style="width:70px; text-align:center; background:var(--input-bg); border:1px solid var(--border); border-radius:6px; padding:4px; font-weight:800; color:var(--text);">
+        </td>
+        <td>
+          <input type="number" min="0" step="50" value="${unitPrice}" oninput="updateOrderItemUnitPrice(${idx}, this.value)" style="width:95px; text-align:center; background:var(--input-bg); border:1px solid var(--border); border-radius:6px; padding:4px; color:var(--accent); font-weight:700;">
+        </td>
+        <td style="text-align:right; font-weight:900; color:var(--accent);" id="mod-subtotal-item-${idx}">
+          ${fmtPrice(subtotal)}
+        </td>
+        <td style="text-align:center;">
+          <button type="button" class="btn btn-danger btn-sm" onclick="removeOrderItem(${idx})" style="padding:4px 8px;" title="Supprimer cet article">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// تعديل الحقول النصية
+function updateOrderItemField(index, field, value) {
+  if (currentOrderEditingItems[index]) {
+    currentOrderEditingItems[index][field] = value.trim();
+  }
+}
+
+// تعديل الكمية وحساب الإجمالي
+function updateOrderItemQty(index, newQty) {
+  const qty = Math.max(1, parseInt(newQty, 10) || 1);
+  if (currentOrderEditingItems[index]) {
+    currentOrderEditingItems[index].qty = qty;
+    const unitPrice = parseFloat(currentOrderEditingItems[index].unit_price || currentOrderEditingItems[index].price || 0);
+    const subtotalEl = document.getElementById(`mod-subtotal-item-${index}`);
+    if (subtotalEl) subtotalEl.textContent = fmtPrice(unitPrice * qty);
+    recalculateModalOrderTotals();
+  }
+}
+
+// تعديل سعر القطعة الواحدة وحساب الإجمالي
+function updateOrderItemUnitPrice(index, newPrice) {
+  const price = Math.max(0, parseFloat(newPrice) || 0);
+  if (currentOrderEditingItems[index]) {
+    currentOrderEditingItems[index].unit_price = price;
+    currentOrderEditingItems[index].price = price;
+    const qty = parseInt(currentOrderEditingItems[index].qty || 1, 10);
+    const subtotalEl = document.getElementById(`mod-subtotal-item-${index}`);
+    if (subtotalEl) subtotalEl.textContent = fmtPrice(price * qty);
+    recalculateModalOrderTotals();
+  }
+}
+
+// حذف قطعة من الطلبية
+function removeOrderItem(index) {
+  if (!confirm("Voulez-vous retirer cet article de la commande ?")) return;
+  currentOrderEditingItems.splice(index, 1);
+  renderModalEditableItems();
+  recalculateModalOrderTotals();
+}
+
+// دالة تفعيل/إلغاء التوصيل المجاني بنقرة واحدة
+function toggleModalFreeShipping() {
+  isFreeShippingActive = !isFreeShippingActive;
+  recalculateModalOrderTotals();
+  toast(isFreeShippingActive ? "Livraison gratuite appliquée !" : "Frais de livraison rétablis.", "ok");
+}
+
+// عند تغيير الولاية
+function onModalWilayaChange() {
+  const sel = document.getElementById('mod-client-wilaya-sel');
+  if (!sel) return;
+  const opt = sel.options[sel.selectedIndex];
+  if (opt) {
+    const wilayaPrice = parseFloat(opt.dataset.price) || 0;
+    originalDeliveryFee = wilayaPrice;
+    recalculateModalOrderTotals();
+  }
+}
+
+// إعادة حساب المجاميع بدقة
+function recalculateModalOrderTotals() {
+  // مجموع القطع = (السعر × الكمية)
+  let itemsTotal = 0;
+  currentOrderEditingItems.forEach(it => {
+    const uPrice = parseFloat(it.unit_price || it.price || 0);
+    const qty = parseInt(it.qty || it.quantity || 1, 10);
+    itemsTotal += (uPrice * qty);
+  });
+
+  // التوصيل: إذا تم الضغط على زر التوصيل المجاني تصبح قيمته 0
+  const activeFee = isFreeShippingActive ? 0 : originalDeliveryFee;
+  const grandTotal = itemsTotal + activeFee;
+
+  // تحديث الواجهة
+  const feeEl = document.getElementById('mod-calc-fee');
+  const totalEl = document.getElementById('mod-calc-total');
+  const freeBtn = document.getElementById('btn-toggle-free-shipping');
+  const statusTxt = document.getElementById('mod-shipping-status-txt');
+
+  if (feeEl) feeEl.textContent = fmtPrice(activeFee);
+  if (totalEl) totalEl.textContent = fmtPrice(grandTotal);
+
+  if (freeBtn) {
+    if (isFreeShippingActive) {
+      freeBtn.style.background = '#00c896';
+      freeBtn.style.color = '#fff';
+      freeBtn.innerHTML = '<i class="fas fa-check-circle"></i> Livraison Gratuite Active';
+      if (statusTxt) statusTxt.textContent = "Livraison offerte (0 DA)";
+    } else {
+      freeBtn.style.background = 'rgba(0,200,150,.15)';
+      freeBtn.style.color = 'var(--accent)';
+      freeBtn.innerHTML = '<i class="fas fa-gift"></i> Appliquer Livraison Gratuite';
+      if (statusTxt) statusTxt.textContent = `Frais standard : ${originalDeliveryFee} DA`;
+    }
+  }
+}
+// حفظ التعديلات في قاعدة بيانات Supabase
 async function saveOrder() {
   const statusSel = document.getElementById('mod-status-sel');
-  const livreurSel = document.getElementById('mod-livreur-sel');
   const noteEl = document.getElementById('mod-note');
   const trackInput = document.getElementById('mod-tracking-input');
+  const nameInp = document.getElementById('mod-client-name-inp');
+  const phoneInp = document.getElementById('mod-client-phone-inp');
+  const addrInp = document.getElementById('mod-client-addr-inp');
+  const wilayaSel = document.getElementById('mod-client-wilaya-sel');
 
   const newStatus = statusSel ? statusSel.value : 'Pending';
-  const livreurId = (livreurSel && livreurSel.value) ? livreurSel.value : null;
-  const noteAdmin = noteEl ? noteEl.value : null;
-  const trackingInputVal = (trackInput && trackInput.value.trim() !== '') ? trackInput.value.trim() : null;
+  const noteAdmin = noteEl ? noteEl.value.trim() : null;
+  const trackingCode = (trackInput && trackInput.value.trim() !== '') ? trackInput.value.trim() : null;
+  const customerName = nameInp ? nameInp.value.trim() : '';
+  const customerPhone = phoneInp ? phoneInp.value.trim() : '';
+  const customerAddress = addrInp ? addrInp.value.trim() : '';
+  const wilayaId = wilayaSel ? parseInt(wilayaSel.value, 10) || null : null;
+
+  // احتساب الإجمالي النهائي بدقة
+  let itemsSubtotal = 0;
+  currentOrderEditingItems.forEach(it => {
+    const uPrice = parseFloat(it.unit_price || it.price || 0);
+    const qty = parseInt(it.qty || it.quantity || 1, 10);
+    it.price = uPrice; // توحيد السعر داخل كل كائن
+    itemsSubtotal += (uPrice * qty);
+  });
+
+  const finalDeliveryFee = isFreeShippingActive ? 0 : originalDeliveryFee;
+  const finalTotalPrice = itemsSubtotal + finalDeliveryFee;
 
   try {
     const { data: order, error: fetchErr } = await dbFrom('orders').select('*').eq('id', currentOrderId).single();
@@ -3824,105 +4014,64 @@ async function saveOrder() {
       return;
     }
 
-    let trackingCode = trackingInputVal || order.tracking_number || null;
-    let labelUrl = order.tracking_label_url || null;
-
-    let items = order.items;
-    if (typeof items === 'string') {
-      try { items = JSON.parse(items); } catch(e) { items = []; }
-    }
-
-    // 1. حالة التأكيد: خصم المخزون ومحاولة إرسال الطرد لـ Zimou إن توفر الرمز البرمجي
+    // إدارة حركة المخزون عند التأكيد أو الإلغاء
     if (newStatus === 'Confirmed' && order.status !== 'Confirmed') {
-      if (Array.isArray(items) && items.length > 0) {
-        for (const item of items) {
+      if (Array.isArray(currentOrderEditingItems) && currentOrderEditingItems.length > 0) {
+        for (const item of currentOrderEditingItems) {
           const pId = item.product_id;
-          const qty = parseInt(item.qty || item.quantity, 10) || 1;
+          const qty = parseInt(item.qty || 1, 10);
           if (!pId) continue;
 
           const { data: prod } = await dbFrom('products').select('*').eq('id', pId).single();
           if (prod) {
             const updatedStock = Math.max(0, (parseInt(prod.stock, 10) || 0) - qty);
-            let sizesArr = typeof prod.sizes === 'string' ? JSON.parse(prod.sizes || '[]') : (prod.sizes || []);
-            
-            if (Array.isArray(sizesArr) && sizesArr.length > 0) {
-              sizesArr = sizesArr.map(s => {
-                if ((!item.size || s.size === item.size) && (!item.color || s.color === item.color)) {
-                  return { ...s, qty: Math.max(0, (parseInt(s.qty, 10) || 0) - qty) };
-                }
-                return s;
-              });
-            }
-
-            await dbFrom('products').update({ stock: updatedStock, sizes: sizesArr }).eq('id', pId);
+            await dbFrom('products').update({ stock: updatedStock }).eq('id', pId);
             await dbFrom('stock_movements').insert([{ product_id: pId, type: 'OUT', quantity: qty, reason: `Commande #${currentOrderId} (Confirmée)` }]);
           }
         }
       }
-
-      // الاتصال بـ Zimou اختياري تماماً ولا يعطل الحفظ إذا كان الرمز غير مفعّل أو فشل الطلب
-      if (!trackingCode && typeof ZR_API_TOKEN !== 'undefined' && ZR_API_TOKEN.trim() !== '' && ZR_API_TOKEN !== 'YOUR_ZR_EXPRESS_API_TOKEN_HERE') {
-        try {
-          const zrResult = await createZRColis(order);
-          if (zrResult && zrResult.success) {
-            trackingCode = zrResult.tracking;
-            labelUrl = zrResult.labelUrl;
-            toast(`Colis synchronisé avec Zimou !`, 'ok');
-          }
-        } catch(zrErr) {
-          console.warn("Zimou sync bypassed:", zrErr);
-        }
-      }
-    } 
-    // 2. حالة الإلغاء: إرجاع المخزون تلقائياً
-    else if (newStatus === 'Cancelled' && order.status === 'Confirmed') {
-      if (Array.isArray(items) && items.length > 0) {
-        for (const item of items) {
+    } else if (newStatus === 'Cancelled' && order.status === 'Confirmed') {
+      if (Array.isArray(currentOrderEditingItems) && currentOrderEditingItems.length > 0) {
+        for (const item of currentOrderEditingItems) {
           const pId = item.product_id;
-          const qty = parseInt(item.qty || item.quantity, 10) || 1;
+          const qty = parseInt(item.qty || 1, 10);
           if (!pId) continue;
 
           const { data: prod } = await dbFrom('products').select('*').eq('id', pId).single();
           if (prod) {
             const updatedStock = (parseInt(prod.stock, 10) || 0) + qty;
-            let sizesArr = typeof prod.sizes === 'string' ? JSON.parse(prod.sizes || '[]') : (prod.sizes || []);
-            
-            if (Array.isArray(sizesArr) && sizesArr.length > 0) {
-              sizesArr = sizesArr.map(s => {
-                if ((!item.size || s.size === item.size) && (!item.color || s.color === item.color)) {
-                  return { ...s, qty: (parseInt(s.qty, 10) || 0) + qty };
-                }
-                return s;
-              });
-            }
-
-            await dbFrom('products').update({ stock: updatedStock, sizes: sizesArr }).eq('id', pId);
+            await dbFrom('products').update({ stock: updatedStock }).eq('id', pId);
             await dbFrom('stock_movements').insert([{ product_id: pId, type: 'IN', quantity: qty, reason: `Retour Commande #${currentOrderId} (Annulée)` }]);
           }
         }
       }
-      toast('Stock retourné automatiquement suite à l\'annulation.', 'ok');
     }
 
-    // 3. تجهيز بيانات التحديث والحفظ دون أي اشتراط على رقم التتبع
+    // كائن التحديث المرسل إلى قاعدة البيانات
     const updatePayload = {
+      customer_name: customerName,
+      customer_phone: customerPhone,
+      customer_address: customerAddress,
+      wilaya_id: wilayaId,
+      items: currentOrderEditingItems,
+      total_price: finalTotalPrice,
+      delivery_fee: finalDeliveryFee,
+      free_shipping: isFreeShippingActive,
       status: newStatus,
-      livreur_id: livreurId,
       note_admin: noteAdmin,
-      tracking_number: trackingCode,
-      tracking_label_url: labelUrl
+      tracking_number: trackingCode
     };
 
     const { error: updateErr } = await dbFrom('orders').update(updatePayload).eq('id', currentOrderId);
 
     if (!updateErr) {
-      toast('Commande enregistrée avec succès !', 'ok');
-      logAudit('order', `Commande #${currentOrderId} mise à jour → ${newStatus}`, 'order');
-      closeModal('modal-order'); 
+      toast('Commande modifiée et enregistrée avec succès !', 'ok');
+      logAudit('order', `Commande #${currentOrderId} modifiée (Total: ${finalTotalPrice} DA, Livraison: ${finalDeliveryFee} DA)`, 'order');
+      closeModal('modal-order');
       await loadAll();
     } else {
       console.error("Supabase Error:", updateErr);
-      toast('Erreur lors de la mise à jour: ' + updateErr.message, 'err');
+      toast('Erreur: ' + updateErr.message, 'err');
     }
   } catch (err) {
     console.error("Erreur saveOrder:", err);
