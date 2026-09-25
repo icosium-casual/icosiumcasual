@@ -191,11 +191,14 @@ function checkIsComingSoon(product) {
     return target > now;
 }
 
-// ─── جلب البيانات ───
 async function loadInitialData() {
-    await getCategories();
-    await getProducts();
-    await getReviews();
+    // جلب الفئات والمنتجات والآراء في وقت واحد لتوفير الوقت
+    await Promise.all([
+        getCategories(),
+        getProducts(),
+        getReviews()
+    ]);
+    
     setLanguage(currentLanguage);
     const savedTheme = localStorage.getItem('icosium_theme') || 'dark';
     applyTheme(savedTheme);
@@ -241,10 +244,11 @@ async function getCategories() {
     });
 }
 
+// في ملف script.js داخل دالة getProducts()
 async function getProducts() {
     const { data: products, error } = await supabaseClient
         .from('products')
-        .select('*')
+        .select('id, name, price, compare_at_price, image_url, extra_images, stock, is_coming_soon, available_at, category_id, sizes, description')
         .eq('is_deleted', false)
         .order('id', { ascending: false });
 
